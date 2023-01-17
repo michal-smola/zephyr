@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2016 Freescale Semiconductor, Inc.
- * Copyright (c) 2017, NXP
+ * Copyright (c) 2017, 2023 NXP
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -14,6 +14,7 @@
 #include <zephyr/irq.h>
 #include <soc.h>
 #include <fsl_common.h>
+#include <fsl_gpio.h>
 
 #include <zephyr/drivers/gpio/gpio_utils.h>
 
@@ -96,7 +97,7 @@ static int gpio_mcux_configure(const struct device *dev,
 		pcr |= PORT_PCR_PE_MASK | PORT_PCR_PS_MASK;
 
 	} else if ((flags & GPIO_PULL_DOWN) != 0) {
-		/* Enable the pull and select the pulldown resistor (deselect
+		/* Enable the pull and select the pulldown resistor deselect
 		 * the pullup resistor.
 		 */
 		pcr |= PORT_PCR_PE_MASK;
@@ -178,6 +179,7 @@ static int gpio_mcux_port_toggle_bits(const struct device *dev, uint32_t mask)
 	return 0;
 }
 
+#if !defined(FSL_FEATURE_PORT_HAS_NO_INTERRUPT) && FSL_FEATURE_PORT_HAS_NO_INTERRUPT
 static uint32_t get_port_pcr_irqc_value_from_flags(const struct device *dev,
 						   uint32_t pin,
 						   enum gpio_int_mode mode,
@@ -211,6 +213,44 @@ static uint32_t get_port_pcr_irqc_value_from_flags(const struct device *dev,
 
 	return PORT_PCR_IRQC(port_interrupt);
 }
+#endif  /* !defined(FSL_FEATURE_PORT_HAS_NO_INTERRUPT) && FSL_FEATURE_PORT_HAS_NO_INTERRUPT */
+
+#if defined(FSL_FEATURE_GPIO_HAS_INTERRUPT_CHANNEL_SELECT) && \
+		FSL_FEATURE_GPIO_HAS_INTERRUPT_CHANNEL_SELECT
+static uint32_t get_gpio_icr_irqc_value_from_flags(const struct device *dev,
+						   uint32_t pin,
+						   enum gpio_int_mode mode,
+						   enum gpio_int_trig trig)
+{
+	gpio_interrupt_config_t gpio_interrupt = 0;
+
+	if (mode == GPIO_INT_MODE_DISABLED) {
+		gpio_interrupt = kGPIO_InterruptStatusFlagDisabled;
+	} else {
+		if (mode == GPIO_INT_MODE_LEVEL) {
+			if (trig == GPIO_INT_TRIG_LOW) {
+				gpio_interrupt = kGPIO_InterruptLogicZero;
+			} else {
+				gpio_interrupt = kGPIO_InterruptLogicOne;
+			}
+		} else {
+			switch (trig) {
+			case GPIO_INT_TRIG_LOW:
+				gpio_interrupt = kGPIO_InterruptFallingEdge;
+				break;
+			case GPIO_INT_TRIG_HIGH:
+				gpio_interrupt = kGPIO_InterruptRisingEdge;
+				break;
+			case GPIO_INT_TRIG_BOTH:
+				gpio_interrupt = kGPIO_InterruptEitherEdge;
+				break;
+			}
+		}
+	}
+
+	return GPIO_ICR_IRQC(gpio_interrupt);
+}
+#endif  /* !(defined(FSL_FEATURE_PORT_HAS_NO_INTERRUPT) && FSL_FEATURE_PORT_HAS_NO_INTERRUPT */
 
 static int gpio_mcux_pin_interrupt_configure(const struct device *dev,
 					     gpio_pin_t pin, enum gpio_int_mode mode,
@@ -237,9 +277,16 @@ static int gpio_mcux_pin_interrupt_configure(const struct device *dev,
 		return -ENOTSUP;
 	}
 
+#if !defined(FSL_FEATURE_PORT_HAS_NO_INTERRUPT) && FSL_FEATURE_PORT_HAS_NO_INTERRUPT
 	uint32_t pcr = get_port_pcr_irqc_value_from_flags(dev, pin, mode, trig);
 
 	port_base->PCR[pin] = (port_base->PCR[pin] & ~PORT_PCR_IRQC_MASK) | pcr;
+#elif defined(FSL_FEATURE_GPIO_HAS_INTERRUPT_CHANNEL_SELECT) && \
+		FSL_FEATURE_GPIO_HAS_INTERRUPT_CHANNEL_SELECT
+	uint32_t icr = get_gpio_icr_irqc_value_from_flags(dev, pin, mode, trig);
+
+	gpio_base->ICR[pin] = (gpio_base->ICR[pin] & ~GPIO_ICR_IRQC_MASK) | icr;
+#endif  /* !(defined(FSL_FEATURE_PORT_HAS_NO_INTERRUPT) && FSL_FEATURE_PORT_HAS_NO_INTERRUPT */
 
 	return 0;
 }
@@ -258,10 +305,18 @@ static void gpio_mcux_port_isr(const struct device *dev)
 	struct gpio_mcux_data *data = dev->data;
 	uint32_t int_status;
 
+#if !defined(FSL_FEATURE_PORT_HAS_NO_INTERRUPT) && FSL_FEATURE_PORT_HAS_NO_INTERRUPT
 	int_status = config->port_base->ISFR;
 
 	/* Clear the port interrupts */
 	config->port_base->ISFR = int_status;
+#elif defined(FSL_FEATURE_GPIO_HAS_INTERRUPT_CHANNEL_SELECT) && \
+		FSL_FEATURE_GPIO_HAS_INTERRUPT_CHANNEL_SELECT
+	int_status = config->gpio_base->ISFR[0];
+
+	/* Clear the gpio interrupts */
+	config->gpio_base->ISFR[0] = int_status;
+#endif  /* !(defined(FSL_FEATURE_PORT_HAS_NO_INTERRUPT) && FSL_FEATURE_PORT_HAS_NO_INTERRUPT */
 
 	gpio_fire_callbacks(&data->callbacks, dev, int_status);
 }
