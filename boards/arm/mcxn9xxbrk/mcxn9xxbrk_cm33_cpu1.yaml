@@ -1,0 +1,18 @@
+#
+# Copyright 2023 NXP
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+identifier: mcxn9xxbrk_cpu1
+name: NXP MCXN9xxbrk (CPU1)
+type: mcu
+arch: arm
+ram: 512
+flash: 2048
+toolchain:
+  - zephyr
+  - gnuarmemb
+  - xtools
+supported:
+  - gpio

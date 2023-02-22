@@ -1,0 +1,47 @@
+/*
+ * Copyright 2023 NXP
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+
+#include <nxp/nxp_mcxn94x_ns.dtsi>
+#include "mcxn9xxbrk_cm33.dtsi"
+
+/ {
+	model = "NXP MCXN9xxBRK board";
+	compatible = "nxp,mcxn9xxbrk", "nxp,mcx";
+
+	cpus {
+		/delete-node/ cpu@0;
+	};
+
+	chosen {
+		zephyr,sram = &sram6;
+		zephyr,flash = &flash;
+	};
+};
+
+/*
+ * Default for this board is to allocate SRAM6-7 to cpu1 but the
+ * application can have an application specific device tree to
+ * allocate the SRAM0-7 differently.
+ *
+ * For example, SRAM0-6 could be allocated to cpu0 with only SRAM7
+ * for cpu1. This would require the zephyr,sram chosen value for cpu1
+ * to be changed to sram7 and value DT_SIZE_K would change to 32.
+ *
+ */
+&sram6 {
+	compatible = "mmio-sram";
+	reg = <0x20050000 DT_SIZE_K(96)>;
+};
+
+&gpio3 {
+	status = "okay";
+};
+
+&blue_led {
+	status = "okay";
+};

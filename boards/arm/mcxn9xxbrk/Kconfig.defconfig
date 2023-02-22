@@ -1,0 +1,10 @@
+# Copyright 2023 NXP
+# SPDX-License-Identifier: Apache-2.0
+
+if BOARD_MCXN9XXBRK_CPU0 || BOARD_MCXN9XXBRK_CPU1
+
+config BOARD
+	default "mcxn9xxbrk_cpu0" if BOARD_MCXN9XXBRK_CPU0
+	default "mcxn9xxbrk_cpu1" if BOARD_MCXN9XXBRK_CPU1
+
+endif # BOARD_MCXN9XXBRK_CPU0 || BOARD_MCXN9XXBRK_CPU1
