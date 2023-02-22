@@ -109,15 +109,45 @@ static int mcux_lpc_syscon_clock_control_get_subsys_rate(
 	case MCUX_HS_SPI1_CLK:
 		*rate = CLOCK_GetFlexCommClkFreq(16);
 		break;
+#else
+	case MCUX_FLEXCOMM0_CLK:
+		*rate = CLOCK_GetLPFlexCommClkFreq(0);
+		break;
+	case MCUX_FLEXCOMM1_CLK:
+		*rate = CLOCK_GetLPFlexCommClkFreq(1);
+		break;
+	case MCUX_FLEXCOMM2_CLK:
+		*rate = CLOCK_GetLPFlexCommClkFreq(2);
+		break;
+	case MCUX_FLEXCOMM3_CLK:
+		*rate = CLOCK_GetLPFlexCommClkFreq(3);
+		break;
+	case MCUX_FLEXCOMM4_CLK:
+		*rate = CLOCK_GetLPFlexCommClkFreq(4);
+		break;
+	case MCUX_FLEXCOMM5_CLK:
+		*rate = CLOCK_GetLPFlexCommClkFreq(5);
+		break;
+	case MCUX_FLEXCOMM6_CLK:
+		*rate = CLOCK_GetLPFlexCommClkFreq(6);
+		break;
 #endif
 
 #if (defined(FSL_FEATURE_SOC_USDHC_COUNT) && FSL_FEATURE_SOC_USDHC_COUNT)
+
+#if CONFIG_SOC_FAMILY_MCX
+	case MCUX_USDHC1_CLK:
+		*rate = CLOCK_GetUsdhcClkFreq();
+		break;
+#else
 	case MCUX_USDHC1_CLK:
 		*rate = CLOCK_GetSdioClkFreq(0);
 		break;
 	case MCUX_USDHC2_CLK:
 		*rate = CLOCK_GetSdioClkFreq(1);
 		break;
+#endif
+
 #endif
 
 #if (defined(FSL_FEATURE_SOC_SDIF_COUNT) && \
