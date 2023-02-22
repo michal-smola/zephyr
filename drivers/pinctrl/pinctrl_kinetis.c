@@ -25,6 +25,9 @@ static PORT_Type *ports[] = {
 #if DT_NUM_INST_STATUS_OKAY(DT_DRV_COMPAT) > 4
 	(PORT_Type *)DT_REG_ADDR(DT_NODELABEL(porte)),
 #endif
+#if DT_NUM_INST_STATUS_OKAY(DT_DRV_COMPAT) > 5
+	(PORT_Type *)DT_REG_ADDR(DT_NODELABEL(portf)),
+#endif
 };
 
 #define PIN(mux) (((mux) & 0xFC00000) >> 22)
