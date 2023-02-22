@@ -1,0 +1,17 @@
+# Copyright 2023 NXP
+# SPDX-License-Identifier: Apache-2.0
+
+if SOC_SERIES_MCX_N94X
+
+config SOC_SERIES
+	default "n94x"
+
+config NUM_IRQS
+	default 155
+
+config ZTEST_NO_YIELD
+	default y if (PM && ZTEST)
+
+source "soc/arm/nxp_mcx/n94x/Kconfig.defconfig.n94*"
+
+endif # SOC_SERIES_MCX_N94X

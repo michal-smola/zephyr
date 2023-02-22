@@ -1,0 +1,20 @@
+# Copyright 2023 NXP
+# SPDX-License-Identifier: Apache-2.0
+
+config SOC_FAMILY_MCX
+	bool
+	select HAS_SEGGER_RTT
+
+if SOC_FAMILY_MCX
+
+config SOC_FAMILY
+	string
+	default "nxp_mcx"
+
+source "soc/arm/nxp_mcx/*/Kconfig.soc"
+
+config SOC_PART_NUMBER
+	default SOC_PART_NUMBER_MCX_N94X if SOC_SERIES_MCX_N94X
+
+
+endif # SOC_FAMILY_MCX

@@ -1,0 +1,8 @@
+# Copyright 2023 NXP
+# SPDX-License-Identifier: Apache-2.0
+
+config SERIAL_INIT_PRIORITY
+	default 55
+	depends on SERIAL
+
+source "soc/arm/nxp_mcx/*/Kconfig.defconfig.series"

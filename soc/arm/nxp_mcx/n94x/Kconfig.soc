@@ -1,0 +1,51 @@
+# Copyright 2023 NXP
+# SPDX-License-Identifier: Apache-2.0
+
+choice
+	prompt "MCX N94X Series MCU Selection"
+	depends on SOC_SERIES_MCX_N94X
+
+config SOC_MCX_N947_CPU0
+	bool "SOC_MCXN947 M33 [CPU 0]"
+	select CPU_HAS_ARM_SAU
+	select CPU_HAS_ARM_MPU
+	select CPU_HAS_FPU
+	select PLATFORM_SPECIFIC_INIT
+	select ARMV8_M_DSP
+	select ARM_TRUSTZONE_M
+	select CPU_CORTEX_M_HAS_SYSTICK
+	select HAS_MCUX
+	select HAS_MCUX_CACHE
+
+config SOC_MCX_N947_CPU1
+	bool "SOC_MCXN947 M33 [CPU 1]"
+	select CPU_CORTEX_M_HAS_SYSTICK
+
+endchoice
+
+if SOC_SERIES_MCX_N94X
+
+config SOC_PART_NUMBER_MCXN947VDF
+	bool
+
+config SOC_PART_NUMBER_MCXN947VNL
+	bool
+
+config SOC_PART_NUMBER_MCX_N94X
+	string
+	default "MCXN947VDF" if SOC_PART_NUMBER_MCXN947VDF
+	default "MCXN947VNL" if SOC_PART_NUMBER_MCXN947VNL
+
+	help
+	  This string holds the full part number of the SoC. It is a hidden
+	  option that you should not set directly. The part number selection
+	  choice defines the default value for this string.
+
+config SECOND_CORE_MCUX
+	bool "MCXN94X's second core"
+	depends on HAS_MCUX
+	help
+	  Indicates the second core will be enabled, and the part will run
+	  in dual core mode.
+
+endif # SOC_SERIES_MCX_N94X

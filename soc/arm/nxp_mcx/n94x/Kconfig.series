@@ -1,0 +1,14 @@
+# i.MX RT5XX Series
+
+# Copyright (c) 2022, NXP
+# SPDX-License-Identifier: Apache-2.0
+
+config SOC_SERIES_MCX_N94X
+	bool "MCX N94X Series Family MCU"
+	select ARM
+	select CPU_CORTEX_M33
+	select CPU_CORTEX_M_HAS_DWT
+	select SOC_FAMILY_MCX
+	select CLOCK_CONTROL
+	help
+	  Enable support for MCX N94X Series MCU series

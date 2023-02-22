@@ -1,0 +1,23 @@
+# Copyright 2023 NXP
+# SPDX-License-Identifier: Apache-2.0
+
+if SOC_MCX_N947_CPU0
+
+config SOC
+	default "mcxn947_cpu0"
+
+if MCUX_OS_TIMER
+
+config SYS_CLOCK_HW_CYCLES_PER_SEC
+	default 1000000
+
+endif # MCUX_OS_TIMER
+
+if CORTEX_M_SYSTICK
+
+config SYS_CLOCK_HW_CYCLES_PER_SEC
+	default 150000000
+
+endif # CORTEX_M_SYSTICK
+
+endif # SOC_MCX_N947_CPU0
