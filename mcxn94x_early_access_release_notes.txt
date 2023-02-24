@@ -1,0 +1,53 @@
+Zephyr MCXN94X Early Access Release 1.0
+=======================================
+
+This document outlines the committed features and support intended by this
+early access release.
+
+Supported Devices
+-----------------
+This and following EAR releases for the MCXN94X currently are only guaranteeing
+support for the MCXN947VDF derivative of the MCXN947 series.
+
+Structure of Released Code
+--------------------------
+The software patches for this early access of the MCXN947 Zephyr support are
+released as two git branches, one for the NXP HAL module and one for the Zephyr
+tree. The name of the branch on the Zephyr repo is "mcxn94x_ear". The
+name of the branch on the HAL NXP repo is "mcxn94x_ear". Each branch is based
+off of the point of the official Zephyr v3.3.0 release.
+
+Overview of Supported Features
+------------------------------
+- Basic zephyr infrastructure to target MCXN9XX Breakout board
+  and MCXN947VDF SOC by the zephyr build.
+- Name of supported board is "mcxn9xxbrk_cm33_cpu0".
+- A default system clock setup in zephyr soc initialization stage is provided.
+- Pin control subsystem is implemented on the PORT peripherals.
+- OS Timer is enabled
+- LPUART is enabled.
+- GPIO is enabled.
+
+
+Testing Done on Supported Features
+----------------------------------
+- Basic zephyr infrastucture was tested by confirming that the zephyr image
+  targeting the MCXN94X builds and can be loaded into the MCXN94X flash memory
+  region, and then is executed by the core processor.
+- Clock setup was observed manually using a debugger and looking at peripheral
+  registers, mainly the SCG and SYSCON. The other features also rely on the
+  clock setup in order to function correctly, so this was indirectly tested.
+- Zephyr kernel functions were tested using tests/kernel/common.
+- Pin control was also a dependency for other features to show expected
+  behaviour. The PORT registers were also manually observed while debugging
+  the application of pin control states in driver code.
+- LPUART was tested using the samples/hello_world in-tree sample,
+  and also subsequently became a dependency for getting serial console
+  output to observe the results of other feature tests.
+- GPIO was tested using the samples/basic/blinky in-tree sample, which uses
+  GPIO to toggle a LED on the Breakout board.
+- GPIO was also tested using the samples/basic/button in-tree sample,
+  which uses a switch input to toggle a LED on the Breakout board.
+Any functionality not covered by one of the tests is not guaranteed.
+
+Non-secure version of devicetree is not supported.
