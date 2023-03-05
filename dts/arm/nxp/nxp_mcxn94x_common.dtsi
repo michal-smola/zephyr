@@ -207,7 +207,7 @@
 		compatible = "nxp,lpc-flexcomm";
 		reg = <0xb4000 0x1000>;
 		interrupts = <39 0>;
-		clocks = <&syscon MCUX_FLEXCOMM4_CLK 204 15>;
+		clocks = <&syscon MCUX_FLEXCOMM4_CLK 1 15>;
 		status = "disabled";
 	};
 
@@ -241,6 +241,14 @@
 	 * MCXN94X relies by default on the OS Timer for system clock
 	 * implementation, so the SysTick node is not to be enabled.
 	 */
+	status = "disabled";
+};
+
+&flexspi {
+	compatible = "nxp,imx-flexspi";
+	interrupts = <58 0>;
+	#address-cells = <1>;
+	#size-cells = <0>;
 	status = "disabled";
 };
 

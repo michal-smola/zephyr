@@ -121,6 +121,13 @@ static ALWAYS_INLINE void clock_init(void)
 	CLOCK_EnableClock(kCLOCK_Gpio5);
 #endif
 
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(flexspi), okay)
+	/* Flexspi frequency 150MHz / 2 = 75MHz */
+	CLOCK_SetClkDiv(kCLOCK_DivFlexspiClk, 2U);
+	/* Switch FLEXSPI to PLL0 */
+	CLOCK_AttachClk(kPLL0_to_FLEXSPI);
+#endif
+
 	/* Set SystemCoreClock variable. */
 	SystemCoreClock = CLOCK_INIT_CORE_CLOCK;
 }
