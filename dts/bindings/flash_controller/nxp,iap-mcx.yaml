@@ -1,0 +1,5 @@
+description: NXP MCX Flash Memory Module (FMU)
+
+compatible: "nxp,iap-mcx"
+
+include: flash-controller.yaml

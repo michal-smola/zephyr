@@ -211,11 +211,11 @@
 		status = "disabled";
 	};
 
-	ftfe: flash-controller@43000 {
-		compatible = "nxp,kinetis-ftfe";
+	fmu: flash-controller@43000 {
+		compatible = "nxp,iap-mcx";
 		reg = <0x43000 0x1000>;
 		interrupts = <138 0>;
-		status = "okay";
+		status = "disabled";
 
 		#address-cells = <1>;
 		#size-cells = <1>;
@@ -223,8 +223,8 @@
 		flash: flash@0 {
 			compatible = "soc-nv-flash";
 			reg = <0 DT_SIZE_M(2)>;
-			erase-block-size = <4096>;
-			write-block-size = <8>;
+			erase-block-size = <8192>;
+			write-block-size = <16>;
 		};
 	};
 

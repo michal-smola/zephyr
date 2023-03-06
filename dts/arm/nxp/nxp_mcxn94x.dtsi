@@ -30,3 +30,11 @@
 };
 
 #include "nxp_mcxn94x_common.dtsi"
+
+/*
+ * Explicitly enable FMU after we include the common dtsi file,
+ * which will set it to disabled.
+ */
+&fmu {
+	status = "okay";
+};
