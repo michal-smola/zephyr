@@ -12,6 +12,13 @@ config NUM_IRQS
 config ZTEST_NO_YIELD
 	default y if (PM && ZTEST)
 
+if CODE_FLEXSPI
+
+config FLASH_LOAD_OFFSET
+	default 0x08000000
+
+endif # CODE_FLEXSPI
+
 source "soc/arm/nxp_mcx/n94x/Kconfig.defconfig.n94*"
 
 endif # SOC_SERIES_MCX_N94X

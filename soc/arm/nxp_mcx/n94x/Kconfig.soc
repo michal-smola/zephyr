@@ -48,4 +48,24 @@ config SECOND_CORE_MCUX
 	  Indicates the second core will be enabled, and the part will run
 	  in dual core mode.
 
+choice CODE_LOCATION
+	prompt "Code location selection"
+	default CODE_FLASH
+
+config CODE_FLEXSPI
+	bool "Link code into external FlexSPI-controlled memory"
+
+config CODE_FLASH
+	bool "Link code into internal Flash"
+
+endchoice
+
+config FLASH_MCUX_FLEXSPI_XIP
+	bool "MCUX FlexSPI flash access with xip"
+	depends on CODE_FLEXSPI
+	select XIP
+	help
+	  Allows for the soc to safely initialize the clocks for the
+	  FlexSpi when planning to execute code in FlexSpi Memory.
+
 endif # SOC_SERIES_MCX_N94X
