@@ -1,3 +1,23 @@
+Zephyr MCXN94X Early Access Release 1.1
+=======================================
+
+This document outlines the committed features and support intended by this
+early access release.
+
+Overview of Supported Features
+------------------------------
+- Support for FlexSPI NOR device.
+- Support for Internal flash.
+- Support for mcuboot from Internal Flash.
+
+Testing Done on Supported Features
+----------------------------------
+- flash_shell application inside samples/drivers/flash_shell
+- littlefs application insde samples/subsys/fs/littlefs
+
+
+
+
 Zephyr MCXN94X Early Access Release 1.0
 =======================================
 
