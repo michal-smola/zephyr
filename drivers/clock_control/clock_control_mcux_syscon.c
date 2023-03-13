@@ -131,6 +131,16 @@ static int mcux_lpc_syscon_clock_control_get_subsys_rate(
 	case MCUX_FLEXCOMM6_CLK:
 		*rate = CLOCK_GetLPFlexCommClkFreq(6);
 		break;
+	case MCUX_FLEXCOMM7_CLK:
+		*rate = CLOCK_GetLPFlexCommClkFreq(7);
+		break;
+	case MCUX_FLEXCOMM8_CLK:
+		*rate = CLOCK_GetLPFlexCommClkFreq(8);
+		break;
+	case MCUX_FLEXCOMM9_CLK:
+		*rate = CLOCK_GetLPFlexCommClkFreq(9);
+		break;
+
 #endif
 
 #if (defined(FSL_FEATURE_SOC_USDHC_COUNT) && FSL_FEATURE_SOC_USDHC_COUNT)

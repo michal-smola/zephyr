@@ -203,11 +203,111 @@
 		nxp,kinetis-port = <&portf>;
 	};
 
+	flexcomm0: flexcomm@92000 {
+		compatible = "nxp,lpc-flexcomm";
+		reg = <0x92000 0x1000>;
+		interrupts = <35 0>;
+		clocks = <&syscon MCUX_FLEXCOMM0_CLK 1 11>;
+		status = "disabled";
+	};
+
+	flexcomm1: flexcomm@93000 {
+		compatible = "nxp,lpc-flexcomm";
+		reg = <0x93000 0x1000>;
+		interrupts = <36 0>;
+		clocks = <&syscon MCUX_FLEXCOMM1_CLK 1 12>;
+		status = "disabled";
+	};
+
+	flexcomm2: flexcomm@94000 {
+		compatible = "nxp,lpc-flexcomm";
+		reg = <0x94000 0x1000>;
+		interrupts = <37 0>;
+		clocks = <&syscon MCUX_FLEXCOMM2_CLK 1 13>;
+		status = "disabled";
+	};
+
+	flexcomm3: flexcomm@95000 {
+		compatible = "nxp,lpc-flexcomm";
+		reg = <0x95000 0x1000>;
+		interrupts = <38 0>;
+		clocks = <&syscon MCUX_FLEXCOMM3_CLK 1 14>;
+		status = "disabled";
+	};
+
 	flexcomm4: flexcomm@b4000 {
 		compatible = "nxp,lpc-flexcomm";
 		reg = <0xb4000 0x1000>;
 		interrupts = <39 0>;
 		clocks = <&syscon MCUX_FLEXCOMM4_CLK 1 15>;
+		status = "disabled";
+	};
+
+	flexcomm5: flexcomm@b5000 {
+		compatible = "nxp,lpc-flexcomm";
+		reg = <0xb5000 0x1000>;
+		interrupts = <40 0>;
+		clocks = <&syscon MCUX_FLEXCOMM4_CLK 1 16>;
+		status = "disabled";
+	};
+
+	flexcomm6: flexcomm@b6000 {
+		compatible = "nxp,lpc-flexcomm";
+		reg = <0xb6000 0x1000>;
+		interrupts = <41 0>;
+		clocks = <&syscon MCUX_FLEXCOMM4_CLK 1 17>;
+		status = "disabled";
+	};
+
+	flexcomm7: flexcomm@b7000 {
+		compatible = "nxp,lpc-flexcomm";
+		reg = <0xb7000 0x1000>;
+		interrupts = <42 0>;
+		clocks = <&syscon MCUX_FLEXCOMM4_CLK 1 18>;
+		status = "disabled";
+	};
+
+	flexcomm8: flexcomm@b8000 {
+		compatible = "nxp,lpc-flexcomm";
+		reg = <0xb8000 0x1000>;
+		interrupts = <43 0>;
+		clocks = <&syscon MCUX_FLEXCOMM4_CLK 1 19>;
+		status = "disabled";
+	};
+
+	flexcomm9: flexcomm@b9000 {
+		compatible = "nxp,lpc-flexcomm";
+		reg = <0xb9000 0x1000>;
+		interrupts = <44 0>;
+		clocks = <&syscon MCUX_FLEXCOMM4_CLK 1 20>;
+		status = "disabled";
+	};
+
+	edma0: dma-controller@80000 {
+		#dma-cells = <2>;
+		compatible = "nxp,mcux-edma";
+		dma-channels = <16>;
+		dma-requests = <120>;
+
+		reg = <0x80000 0x1000>;
+		interrupts = <1 0>, <2 0>, <3 0>, <4 0>,
+			<5 0>, <6 0>, <7 0>, <8 0>,
+			<9 0>, <10 0>, <11 0>, <12 0>,
+			<13 0>, <14 0>, <15 0>, <16 0>;
+		status = "disabled";
+	};
+
+	edma1: dma-controller@a0000 {
+		#dma-cells = <2>;
+		compatible = "nxp,mcux-edma";
+		dma-channels = <16>;
+		dma-requests = <120>;
+
+		reg = <0xa0000 0x1000>;
+		interrupts = <77 0>, <78 0>, <79 0>, <80 0>,
+			<81 0>, <82 0>, <83 0>, <84 0>,
+			<85 0>, <86 0>, <87 0>, <88 0>,
+			<89 0>, <90 0>, <91 0>, <92 0>;
 		status = "disabled";
 	};
 
