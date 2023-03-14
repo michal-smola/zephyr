@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2020 NXP Semiconductor INC.
- * All rights reserved.
+ * Copyright 2020-23 NXP
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -37,7 +36,9 @@ LOG_MODULE_REGISTER(dma_mcux_edma, CONFIG_DMA_LOG_LEVEL);
 
 struct dma_mcux_edma_config {
 	DMA_Type *base;
+#if defined(FSL_FEATURE_SOC_DMAMUX_COUNT) && FSL_FEATURE_SOC_DMAMUX_COUNT
 	DMAMUX_Type **dmamux_base;
+#endif
 	uint8_t channels_per_mux;
 	uint8_t dmamux_reg_offset;
 	int dma_channels; /* number of channels */
@@ -120,7 +121,9 @@ struct dma_mcux_edma_data {
 #define DEV_EDMA_HANDLE(dev, ch) \
 	((edma_handle_t *)(&(DEV_CHANNEL_DATA(dev, ch)->edma_handle)))
 
+#if defined(FSL_FEATURE_SOC_DMAMUX_COUNT) && FSL_FEATURE_SOC_DMAMUX_COUNT
 #define DEV_DMAMUX_BASE(dev, idx) ((DMAMUX_Type *)DEV_CFG(dev)->dmamux_base[idx])
+#endif
 #define DEV_DMAMUX_IDX(dev, ch)	(ch / DEV_CFG(dev)->channels_per_mux)
 
 #define DEV_DMAMUX_CHANNEL(dev, ch) \
@@ -314,6 +317,8 @@ static int dma_mcux_edma_configure(const struct device *dev, uint32_t channel,
 	/* Lock and page in the channel configuration */
 	key = irq_lock();
 
+#if defined(FSL_FEATURE_SOC_DMAMUX_COUNT) && FSL_FEATURE_SOC_DMAMUX_COUNT
+
 #if DT_INST_PROP(0, nxp_a_on)
 	if (config->source_handshake || config->dest_handshake ||
 	    transfer_type == kEDMA_MemoryToMemory) {
@@ -330,12 +335,20 @@ static int dma_mcux_edma_configure(const struct device *dev, uint32_t channel,
 	/* dam_imx_rt_set_channel_priority(dev, channel, config); */
 	DMAMUX_EnableChannel(DEV_DMAMUX_BASE(dev, dmamux_idx), dmamux_channel);
 
+#endif
+
 	if (data->busy) {
 		EDMA_AbortTransfer(p_handle);
 	}
 	EDMA_ResetChannel(DEV_BASE(dev), hw_channel);
 	EDMA_CreateHandle(p_handle, DEV_BASE(dev), hw_channel);
 	EDMA_SetCallback(p_handle, nxp_edma_callback, (void *)data);
+
+#if defined(FSL_FEATURE_EDMA_HAS_CHANNEL_MUX) && FSL_FEATURE_EDMA_HAS_CHANNEL_MUX
+	/* First release any peripheral previously associated with this channel */
+	EDMA_SetChannelMux(DEV_BASE(dev), hw_channel, 0);
+	EDMA_SetChannelMux(DEV_BASE(dev), hw_channel, slot);
+#endif
 
 	LOG_DBG("channel is %d", channel);
 	EDMA_EnableChannelInterrupts(DEV_BASE(dev), hw_channel, kEDMA_ErrorInterruptEnable);
@@ -415,7 +428,9 @@ static int dma_mcux_edma_start(const struct device *dev, uint32_t channel)
 	uint8_t dmamux_channel = DEV_DMAMUX_CHANNEL(dev, channel);
 
 	LOG_DBG("START TRANSFER");
+#if defined(FSL_FEATURE_SOC_DMAMUX_COUNT) && FSL_FEATURE_SOC_DMAMUX_COUNT
 	LOG_DBG("DMAMUX CHCFG 0x%x", DEV_DMAMUX_BASE(dev, dmamux_idx)->CHCFG[dmamux_channel]);
+#endif
 
 #ifndef CONFIG_DMA_MCUX_EDMA_V3
 	LOG_DBG("DMA CR 0x%x", DEV_BASE(dev)->CR);
@@ -532,7 +547,10 @@ static int dma_mcux_edma_get_status(const struct device *dev, uint32_t channel,
 		status->pending_length = 0;
 	}
 	status->dir = DEV_CHANNEL_DATA(dev, channel)->transfer_settings.direction;
+
+#if defined(FSL_FEATURE_SOC_DMAMUX_COUNT) && FSL_FEATURE_SOC_DMAMUX_COUNT
 	LOG_DBG("DMAMUX CHCFG 0x%x", DEV_DMAMUX_BASE(dev, dmamux_idx)->CHCFG[dmamux_channel]);
+#endif
 
 #ifdef CONFIG_DMA_MCUX_EDMA_V3
 	LOG_DBG("DMA MP_CSR 0x%x",  DEV_BASE(dev)->MP_CSR);
@@ -588,9 +606,11 @@ static int dma_mcux_edma_init(const struct device *dev)
 
 	LOG_DBG("INIT NXP EDMA");
 
+#if defined(FSL_FEATURE_SOC_DMAMUX_COUNT) && FSL_FEATURE_SOC_DMAMUX_COUNT
 	for (i = 0; i < config->dma_channels / config->channels_per_mux; i++) {
 		DMAMUX_Init(DEV_DMAMUX_BASE(dev, i));
 	}
+#endif
 
 	EDMA_GetDefaultConfig(&userConfig);
 	EDMA_Init(DEV_BASE(dev), &userConfig);
