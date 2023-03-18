@@ -343,6 +343,21 @@
 		prescaler = <1>;
 		#pwm-cells = <3>;
 	};
+
+	lpadc0: adc@10d000 {
+		compatible = "nxp,lpc-lpadc";
+		reg = <0x10d000 0x1000>;
+		interrupts = <45 0>;
+		status = "disabled";
+		clk-divider = <1>;
+		clk-source = <0>;
+		voltage-ref= <2>;
+		calibration-average = <128>;
+		power-level = <0>;
+		offset-value-a = <0x10>;
+		offset-value-b = <0x10>;
+		#io-channel-cells = <1>;
+	};
 };
 
 &systick {
