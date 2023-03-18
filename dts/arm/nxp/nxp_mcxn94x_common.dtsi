@@ -334,6 +334,15 @@
 		interrupts = <57 0>;
 		status = "disabled";
 	};
+
+	sc_timer: pwm@91000 {
+		compatible = "nxp,sctimer-pwm";
+		reg = <0x91000 0x1000>;
+		interrupts = <33 0>;
+		status = "disabled";
+		prescaler = <1>;
+		#pwm-cells = <3>;
+	};
 };
 
 &systick {
