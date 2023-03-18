@@ -89,3 +89,8 @@
 	status = "okay";
 };
 
+&sc_timer {
+	pinctrl-0 = <&pinmux_sctimer>;
+	pinctrl-names = "default";
+};
+

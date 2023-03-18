@@ -29,6 +29,15 @@
 		};
 	};
 
+	pinmux_sctimer: pinmux_sctimer {
+		group0 {
+			pinmux = <SCT0_OUT4_PIO1_22>;
+			slew-rate = "fast";
+			drive-strength = "low";
+			input-enable;
+		};
+	};
+
 	pinmux_flexspi: pinmux_flexspi {
 		group0 {
 			pinmux = <FLEXSPI0_A_SS0_b_PIO3_0>,

@@ -20,6 +20,8 @@
 	aliases{
 		sw0 = &user_button_3;
 		sw1 = &user_button_2;
+		/* For pwm test suites */
+		pwm-0 = &sc_timer;
 	};
 
 	chosen {
@@ -79,6 +81,10 @@
 };
 
 &flexcomm4 {
+	status = "okay";
+};
+
+&sc_timer {
 	status = "okay";
 };
 
