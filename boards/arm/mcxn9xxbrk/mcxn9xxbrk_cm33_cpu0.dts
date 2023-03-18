@@ -88,6 +88,10 @@
 	status = "okay";
 };
 
+&lpadc0 {
+	status = "okay";
+};
+
 &flexspi {
 	status = "okay";
 	pinctrl-0 = <&pinmux_flexspi>;
