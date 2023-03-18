@@ -126,6 +126,12 @@ static ALWAYS_INLINE void clock_init(void)
 	CLOCK_EnableClock(kCLOCK_Gpio5);
 #endif
 
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(sc_timer), okay)
+	/* attach FRO HF to SCT */
+	CLOCK_SetClkDiv(kCLOCK_DivSctClk, 1u);
+	CLOCK_AttachClk(kFRO_HF_to_SCT);
+#endif
+
 #if DT_NODE_HAS_STATUS(DT_NODELABEL(flexspi), okay)
 	/* Flexspi frequency 150MHz / 2 = 75MHz */
 	CLOCK_SetClkDiv(kCLOCK_DivFlexspiClk, 2U);
