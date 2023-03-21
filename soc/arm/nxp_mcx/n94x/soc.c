@@ -139,6 +139,12 @@ static ALWAYS_INLINE void clock_init(void)
 	CLOCK_AttachClk(kPLL0_to_FLEXSPI);
 #endif
 
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(adc0), okay)
+	/* attach FRO HF to ADC0 */
+	CLOCK_SetClkDiv(kCLOCK_DivAdc0Clk, 1u);
+	CLOCK_AttachClk(kFRO_HF_to_ADC0);
+#endif
+
 	/* Set SystemCoreClock variable. */
 	SystemCoreClock = CLOCK_INIT_CORE_CLOCK;
 }
