@@ -132,11 +132,13 @@ static ALWAYS_INLINE void clock_init(void)
 	CLOCK_AttachClk(kFRO_HF_to_SCT);
 #endif
 
+#if !defined(CONFIG_CODE_FLEXSPI)
 #if DT_NODE_HAS_STATUS(DT_NODELABEL(flexspi), okay)
 	/* Flexspi frequency 150MHz / 2 = 75MHz */
 	CLOCK_SetClkDiv(kCLOCK_DivFlexspiClk, 2U);
 	/* Switch FLEXSPI to PLL0 */
 	CLOCK_AttachClk(kPLL0_to_FLEXSPI);
+#endif
 #endif
 
 #if DT_NODE_HAS_STATUS(DT_NODELABEL(adc0), okay)
