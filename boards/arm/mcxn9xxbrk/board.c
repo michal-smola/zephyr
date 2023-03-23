@@ -96,6 +96,8 @@ static int mcxn9xxbrk_init(const struct device *dev)
 	/* attach FRO HF to ADC0 */
 	CLOCK_SetClkDiv(kCLOCK_DivAdc0Clk, 1u);
 	CLOCK_AttachClk(kFRO_HF_to_ADC0);
+	/* enable VREF */
+	SPC0->ACTIVE_CFG1 |= 0x1;
 #endif
 
 	/* Set SystemCoreClock variable. */
