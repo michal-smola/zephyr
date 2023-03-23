@@ -1,3 +1,25 @@
+Zephyr MCXN94X Early Access Release 1.2
+=======================================
+
+This document outlines the committed features and support intended by this
+early access release.
+
+Overview of Supported Features
+------------------------------
+- Support for SPI.
+- Support for ADC.
+- Support for PWM.
+
+Testing Done on Supported Features
+----------------------------------
+- SPI loopback test inside tests/drivers/spi/spi_loopback
+- PWM test inside tests/drivers/pwm/pwm_api
+- ADC sample test inside samples/drivers/adc
+- XIP was tested using MCUBoot
+
+
+
+
 Zephyr MCXN94X Early Access Release 1.1
 =======================================
 
