@@ -1,0 +1,48 @@
+/*
+ * Copyright 2023 NXP
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+&pinctrl {
+	pinmux_flexcomm1_lpi2c: pinmux_flexcomm1_lpi2c {
+		group0 {
+			pinmux = <FC1_P0_PIO0_24>,
+				<FC1_P1_PIO0_25>;
+			slew-rate = "fast";
+			drive-strength = "low";
+			input-enable;
+			bias-pull-up;
+			drive-open-drain;
+		};
+	};
+};
+
+/* To test this sample, connect
+ * LPI2C1 SCL(J2-33)     -->         LPI2C2 SCL(J1-45)
+ * LPI2C1 SDA(J2-37)     -->         LPI2C2 SDA(J1-46)
+ */
+&flexcomm1 {
+	compatible = "nxp,imx-lpi2c";
+	#address-cells = <1>;
+	#size-cells = <0>;
+	reg = <0x93800 0x1000>;
+	pinctrl-0 = <&pinmux_flexcomm1_lpi2c>;
+	pinctrl-names = "default";
+	clock-frequency = <I2C_BITRATE_STANDARD>;
+	status = "okay";
+	eeprom0: eeprom@54 {
+		compatible = "zephyr,i2c-target-eeprom";
+		reg = <0x54>;
+		size = <1024>;
+	};
+};
+
+&flexcomm2 {
+	status = "okay";
+	eeprom1: eeprom@56 {
+		compatible = "zephyr,i2c-target-eeprom";
+		reg = <0x56>;
+		size = <1024>;
+	};
+};
