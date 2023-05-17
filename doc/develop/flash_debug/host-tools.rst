@@ -206,6 +206,7 @@ LinkServer Debug  Host Tools
 
 Linkserver is a utility for launching and managing GDB servers for NXP debug probes,
 which also provides a command-line target flash programming capabilities.
+
 Linkserver can be used with the `NXP MCUXpresso for Visual Studio Code`_ implementation,
 with custom debug configurations based on GNU tools or as part of a headless solution
 for continuous integration and test. LinkServer can be used with MCU-Link, LPC-Link2,

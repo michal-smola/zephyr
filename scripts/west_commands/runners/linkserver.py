@@ -111,6 +111,7 @@ class LinkServerBinaryRunner(ZephyrBinaryRunner):
         if not hasattr(self, '_linkserver_version'):
             linkserver_version_cmd=[self.linkserver, "-v"]
             ls_output=self.check_output(linkserver_version_cmd)
+
             self.linkserver_version = str(ls_output.split()[1].decode()).lower()
 
         return self.linkserver_version
@@ -123,6 +124,7 @@ class LinkServerBinaryRunner(ZephyrBinaryRunner):
         if command == 'flash':
             self.flash(**kwargs)
         else:
+
             if self.core is not None:
                 _cmd_core = [ "-c",  self.core ]
             else:
