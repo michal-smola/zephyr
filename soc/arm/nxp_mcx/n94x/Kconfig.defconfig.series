@@ -30,6 +30,10 @@ config FLASH_LOAD_OFFSET
 
 endif # CODE_FLEXSPI
 
+choice USB_MCUX_CONTROLLER_TYPE
+	default USB_DC_NXP_EHCI
+endchoice
+
 source "soc/arm/nxp_mcx/n94x/Kconfig.defconfig.n94*"
 
 endif # SOC_SERIES_MCX_N94X
