@@ -358,6 +358,15 @@
 		offset-value-b = <0x10>;
 		#io-channel-cells = <1>;
 	};
+
+	usb1: usbd@10b000 {
+		compatible = "nxp,ehci";
+		reg = <0x10b000 0x1000>;
+		interrupts = <67 0>;
+		interrupt-names = "usb_otg";
+		num-bidir-endpoints = <8>;
+		status = "disabled";
+	};
 };
 
 &systick {
