@@ -22,7 +22,7 @@
 /* System clock frequency. */
 extern uint32_t SystemCoreClock;
 
-static int mcxn9xxbrk_init(const struct device *dev)
+static int mcxn9xxbrk_init(void)
 {
 	/* Enable SCG clock */
 	CLOCK_EnableClock(kCLOCK_Scg);

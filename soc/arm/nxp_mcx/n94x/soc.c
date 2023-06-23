@@ -60,10 +60,8 @@ void z_arm_platform_init(void)
  *
  * @return 0
  */
-static int nxp_mcxn94x_init(const struct device *arg)
+static int nxp_mcxn94x_init(void)
 {
-	ARG_UNUSED(arg);
-
 	/* old interrupt lock level */
 	unsigned int oldLevel;
 
