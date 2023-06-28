@@ -247,7 +247,7 @@
 		compatible = "nxp,lpc-flexcomm";
 		reg = <0xb5000 0x1000>;
 		interrupts = <40 0>;
-		clocks = <&syscon MCUX_FLEXCOMM4_CLK 1 16>;
+		clocks = <&syscon MCUX_FLEXCOMM5_CLK 1 16>;
 		status = "disabled";
 	};
 
@@ -255,7 +255,7 @@
 		compatible = "nxp,lpc-flexcomm";
 		reg = <0xb6000 0x1000>;
 		interrupts = <41 0>;
-		clocks = <&syscon MCUX_FLEXCOMM4_CLK 1 17>;
+		clocks = <&syscon MCUX_FLEXCOMM6_CLK 1 17>;
 		status = "disabled";
 	};
 
@@ -263,7 +263,7 @@
 		compatible = "nxp,lpc-flexcomm";
 		reg = <0xb7000 0x1000>;
 		interrupts = <42 0>;
-		clocks = <&syscon MCUX_FLEXCOMM4_CLK 1 18>;
+		clocks = <&syscon MCUX_FLEXCOMM7_CLK 1 18>;
 		status = "disabled";
 	};
 
@@ -271,7 +271,7 @@
 		compatible = "nxp,lpc-flexcomm";
 		reg = <0xb8000 0x1000>;
 		interrupts = <43 0>;
-		clocks = <&syscon MCUX_FLEXCOMM4_CLK 1 19>;
+		clocks = <&syscon MCUX_FLEXCOMM8_CLK 1 19>;
 		status = "disabled";
 	};
 
@@ -279,7 +279,7 @@
 		compatible = "nxp,lpc-flexcomm";
 		reg = <0xb9000 0x1000>;
 		interrupts = <44 0>;
-		clocks = <&syscon MCUX_FLEXCOMM4_CLK 1 20>;
+		clocks = <&syscon MCUX_FLEXCOMM9_CLK 1 20>;
 		status = "disabled";
 	};
 
