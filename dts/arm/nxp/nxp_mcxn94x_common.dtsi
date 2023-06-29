@@ -367,6 +367,34 @@
 		num-bidir-endpoints = <8>;
 		status = "disabled";
 	};
+
+	flexcan0: can@d4000 {
+		compatible = "nxp,flexcan-fd", "nxp,flexcan";
+		reg = <0xd4000 0x4000>;
+		interrupts = <62 0>;
+		interrupt-names = "common";
+		clocks = <&syscon MCUX_FLEXCAN0_CLK 2 14>;
+		clk-source = <1>;
+		sjw = <1>;
+		sjw-data = <1>;
+		sample-point = <875>;
+		sample-point-data = <875>;
+		status = "disabled";
+	};
+
+	flexcan1: can@d8000 {
+		compatible = "nxp,flexcan-fd", "nxp,flexcan";
+		reg = <0xd8000 0x1000>;
+		interrupts = <63 0>;
+		interrupt-names = "common";
+		clocks = <&syscon MCUX_FLEXCAN1_CLK 2 15>;
+		clk-source = <1>;
+		sjw = <1>;
+		sjw-data = <1>;
+		sample-point = <875>;
+		sample-point-data = <875>;
+		status = "disabled";
+	};
 };
 
 &systick {
