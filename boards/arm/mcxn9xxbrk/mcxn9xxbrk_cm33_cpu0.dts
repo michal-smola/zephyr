@@ -31,6 +31,7 @@
 		zephyr,code-partition = &slot0_partition;
 		zephyr,console = &flexcomm4;
 		zephyr,shell-uart = &flexcomm4;
+		zephyr,canbus = &flexcan0;
 	};
 
 	gpio_keys {
@@ -97,6 +98,10 @@
 };
 
 zephyr_udc0: &usb1 {
+	status = "okay";
+};
+
+&flexcan0 {
 	status = "okay";
 };
 

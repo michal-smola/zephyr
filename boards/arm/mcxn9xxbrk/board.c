@@ -151,6 +151,13 @@ static int mcxn9xxbrk_init(void)
 	CLOCK_EnableUsbhsClock();
 	USB_EhciPhyInit(kUSB_ControllerEhci0, BOARD_XTAL0_CLK_HZ, &usbPhyConfig);
 #endif
+
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(flexcan0), okay)
+	/* attach FRO HF to FLEXCAN0 */
+	CLOCK_SetClkDiv(kCLOCK_DivFlexcan0Clk, 1u);
+	CLOCK_AttachClk(kFRO_HF_to_FLEXCAN0);
+#endif
+
 	/* Set SystemCoreClock variable. */
 	SystemCoreClock = CLOCK_INIT_CORE_CLOCK;
 

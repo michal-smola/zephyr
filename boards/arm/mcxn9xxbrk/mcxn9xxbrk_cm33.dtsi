@@ -109,3 +109,10 @@
 	pinctrl-0 = <&pinmux_lpadc0>;
 	pinctrl-names = "default";
 };
+
+&flexcan0 {
+	bus-speed = <125000>;
+	bus-speed-data = <1000000>;
+	pinctrl-0 = <&pinmux_flexcan0>;
+	pinctrl-names = "default";
+};
