@@ -324,7 +324,7 @@ static int mcux_flexcan_start(const struct device *dev)
 		timing.frJumpwidth = data->timing_data.sjw - 1U;
 		timing.fphaseSeg1 = data->timing_data.phase_seg1 - 1U;
 		timing.fphaseSeg2 = data->timing_data.phase_seg2 - 1U;
-		timing.fpropSeg = data->timing_data.prop_seg;
+		timing.fpropSeg = data->timing_data.prop_seg - 1U;
 		FLEXCAN_SetFDTimingConfig(config->base, &timing);
 	}
 #endif /* CONFIG_CAN_MCUX_FLEXCAN_FD */
@@ -1254,7 +1254,7 @@ static int mcux_flexcan_init(const struct device *dev)
 #ifdef CONFIG_CAN_MCUX_FLEXCAN_FD
 	if (config->flexcan_fd) {
 		flexcan_config.timingConfig.frJumpwidth = data->timing_data.sjw - 1U;
-		flexcan_config.timingConfig.fpropSeg = data->timing_data.prop_seg;
+		flexcan_config.timingConfig.fpropSeg = data->timing_data.prop_seg - 1U;
 		flexcan_config.timingConfig.fphaseSeg1 = data->timing_data.phase_seg1 - 1U;
 		flexcan_config.timingConfig.fphaseSeg2 = data->timing_data.phase_seg2 - 1U;
 
