@@ -1,3 +1,21 @@
+Zephyr MCXN94X Early Access Release 2.0
+=======================================
+
+This release updates the base Zephyr to be based of Zephyr v3.4.0 release.
+The NXP HAL has also been updated to use SDK 2.13.1 release for MCXN9XX.
+
+Overview of Supported Features
+------------------------------
+In addition to the prior supported features, support was added for the following
+- USB Device support on the USBHS controller.
+- FlexCAN support
+
+Testing Done on Supported Features
+----------------------------------
+- USB was tested using the samples inside samples/subsys/usb
+- FlexCAN was tested using the sample inside samples/drivers/can/counter
+
+
 Zephyr MCXN94X Early Access Release 1.3
 =======================================
 
