@@ -23,11 +23,6 @@ config FLASH_SIZE
 config FLASH_BASE_ADDRESS
 	default $(dt_node_reg_addr_hex,/soc/spi@500c8000,1)
 
-# Explicitly set this to 0 as the bootloader is always in internal Flash.
-# So we do not need an offset
-config FLASH_LOAD_OFFSET
-	default 0
-
 endif # CODE_FLEXSPI
 
 choice USB_MCUX_CONTROLLER_TYPE
