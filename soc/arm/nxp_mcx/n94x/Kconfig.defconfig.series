@@ -15,15 +15,22 @@ config ROM_START_OFFSET
 config ZTEST_NO_YIELD
 	default y if (PM && ZTEST)
 
-if CODE_FLEXSPI
+DT_CHOSEN_Z_FLASH := zephyr,flash
+DT_COMPAT_FLEXSPI := nxp,imx-flexspi
 
-config FLASH_SIZE
-	default $(dt_node_reg_size_int,/soc/spi@500c8000,1,K)
+DT_CHOSEN_FLASH_NODE := $(dt_chosen_path,$(DT_CHOSEN_Z_FLASH))
+DT_CHOSEN_FLASH_PARENT := $(dt_node_parent,$(DT_CHOSEN_FLASH_NODE))
+
+DT_FLASH_PARENT_IS_FLEXSPI := $(dt_node_has_compat,$(DT_CHOSEN_FLASH_PARENT),$(DT_COMPAT_FLEXSPI))
+DT_FLASH_HAS_SIZE_PROP := $(dt_node_has_prop,$(DT_CHOSEN_FLASH_NODE),size)
 
 config FLASH_BASE_ADDRESS
-	default $(dt_node_reg_addr_hex,/soc/spi@500c8000,1)
+	default $(dt_node_reg_addr_hex,$(DT_CHOSEN_FLASH_PARENT),1) \
+		if $(DT_FLASH_PARENT_IS_FLEXSPI)
 
-endif # CODE_FLEXSPI
+config FLASH_SIZE
+	default $(dt_node_int_prop_int,$(DT_CHOSEN_FLASH_NODE),size,Kb) \
+		if $(DT_FLASH_HAS_SIZE_PROP)
 
 choice USB_MCUX_CONTROLLER_TYPE
 	default USB_DC_NXP_EHCI
