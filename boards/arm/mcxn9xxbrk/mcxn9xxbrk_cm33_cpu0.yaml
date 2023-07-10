@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-identifier: mcxn9xxbrk_cpu0
+identifier: mcxn9xxbrk_cm33_cpu0
 name: NXP MCXN9xxbrk (CPU0)
 type: mcu
 arch: arm
