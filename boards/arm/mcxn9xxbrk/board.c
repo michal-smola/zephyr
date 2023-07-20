@@ -233,6 +233,11 @@ static int mcxn9xxbrk_init(void)
 	CLOCK_AttachClk(kFRO_HF_to_FLEXCAN0);
 #endif
 
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(flexio0), okay)
+	CLOCK_SetClkDiv(kCLOCK_DivFlexioClk, 1u);
+	CLOCK_AttachClk(kPLL0_to_FLEXIO);
+#endif
+
 	/* Set SystemCoreClock variable. */
 	SystemCoreClock = CLOCK_INIT_CORE_CLOCK;
 

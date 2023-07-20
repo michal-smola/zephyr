@@ -32,6 +32,7 @@
 		zephyr,console = &flexcomm4_lpuart4;
 		zephyr,shell-uart = &flexcomm4_lpuart4;
 		zephyr,canbus = &flexcan0;
+		zephyr,display = &ssd1963_display;
 	};
 
 	gpio_keys {
@@ -59,6 +60,10 @@
 &sram0 {
 	compatible = "mmio-sram";
 	reg = <0x20000000 DT_SIZE_K(320)>;
+};
+
+&gpio4 {
+	status = "okay";
 };
 
 &gpio3 {
@@ -116,6 +121,10 @@ zephyr_udc0: &usb1 {
 };
 
 &flexcan0 {
+	status = "okay";
+};
+
+&flexio0 {
 	status = "okay";
 };
 

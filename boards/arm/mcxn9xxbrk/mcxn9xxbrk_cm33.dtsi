@@ -6,6 +6,7 @@
 
 #include "mcxn9xxbrk_cm33-pinctrl.dtsi"
 #include <zephyr/dt-bindings/i2c/i2c.h>
+#include <zephyr/dt-bindings/display/panel.h>
 
 / {
 	aliases{
@@ -30,6 +31,32 @@
 			gpios = <&gpio3 4 GPIO_ACTIVE_LOW>;
 			label = "Red LED";
 			status = "disabled";
+		};
+	};
+
+	ssd1963_display: ssd1963-display {
+		compatible = "solomon,ssd1963";
+		reset-gpios = <&gpio4 7 GPIO_ACTIVE_LOW>;
+		pixel-format = <PANEL_PIXEL_FORMAT_BGR_565>;
+		xtal-frequency = <10000000>;
+		data-bus-width = <16>;
+		nxp,lcdif = <&flexio0_lcd>;
+		width = <800>;
+		height = <480>;
+		display-timings {
+			compatible = "zephyr,panel-timing";
+			hsync-len = <48>;
+			hfront-porch = <40>;
+			hback-porch = <0>;
+			vsync-len = <3>;
+			vfront-porch = <13>;
+			vback-porch = <18>;
+			hsync-active = <0>;
+			vsync-active = <0>;
+			de-active = <0>;
+			pixelclk-active = <0>;
+			/* Pixel clock */
+			clock-frequency = <30000000>;
 		};
 	};
 };
@@ -104,4 +131,27 @@
 	bus-speed-data = <1000000>;
 	pinctrl-0 = <&pinmux_flexcan0>;
 	pinctrl-names = "default";
+};
+
+&flexio0 {
+	flexio0_lcd: flexio0-lcd {
+		compatible = "nxp,flexio-lcdif";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		/* DMA channels 0, muxed to FlexIO TX */
+		dmas = <&edma0 0 61>;
+		dma-names = "tx";
+		shifters = <0 1 2 3 4 5 6 7>;
+		timers   = <0>;
+		enwr-pin = <1>;
+		rd-pin = <0>;
+		data-pin-start = <16>;
+		bus-type = <0>;
+		/* 16-bit data bus, baud rate on each pin is 1MHz. */
+		baudrate-bps = <160000000>;
+		cs-gpios = <&gpio0 9 GPIO_ACTIVE_LOW>;
+		rs-gpios = <&gpio0 7 GPIO_ACTIVE_LOW>;
+		pinctrl-0 = <&pinmux_flexio_lcd>;
+		pinctrl-names = "default";
+	};
 };
