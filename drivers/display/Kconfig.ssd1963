@@ -1,0 +1,10 @@
+# Copyright 2023, NXP Semiconductor
+#
+# SPDX-License-Identifier: Apache-2.0
+
+config SSD1963
+	bool "SSD1963 compatible display controller driver"
+	default y
+	depends on DT_HAS_SOLOMON_SSD1963_ENABLED
+	help
+	  Enable driver for SSD1963 compatible controller.
