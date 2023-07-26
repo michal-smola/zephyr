@@ -38,29 +38,18 @@
 	status = "okay";
 };
 
-&flexcomm1 {
-	compatible = "nxp,imx-lpspi";
-	#address-cells = <1>;
-	#size-cells = <0>;
+&flexcomm1_lpspi1 {
 	pinctrl-0 = <&pinmux_flexcomm1_lpspi>;
 	pinctrl-names = "default";
-	/* DMA channels 0 and 1, muxed to LPSPI1 RX and TX */
-	dmas = <&edma0 0 71>, <&edma0 1 72>;
-	dma-names = "rx", "tx";
 };
 
-&flexcomm2 {
-	compatible = "nxp,imx-lpi2c";
-	reg = <0x94800 0x1000>;
-	#address-cells = <1>;
-	#size-cells = <0>;
+&flexcomm2_lpi2c2 {
 	pinctrl-0 = <&pinmux_flexcomm2_lpi2c>;
 	pinctrl-names = "default";
 	clock-frequency = <I2C_BITRATE_STANDARD>;
 };
 
-&flexcomm4 {
-	compatible = "nxp,kinetis-lpuart";
+&flexcomm4_lpuart4 {
 	current-speed = <115200>;
 	pinctrl-0 = <&pinmux_flexcomm4_lpuart>;
 	pinctrl-names = "default";

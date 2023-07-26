@@ -29,8 +29,8 @@
 		zephyr,flash = &flash;
 		zephyr,flash-controller = &fmu;
 		zephyr,code-partition = &slot0_partition;
-		zephyr,console = &flexcomm4;
-		zephyr,shell-uart = &flexcomm4;
+		zephyr,console = &flexcomm4_lpuart4;
+		zephyr,shell-uart = &flexcomm4_lpuart4;
 		zephyr,canbus = &flexcan0;
 	};
 
@@ -81,13 +81,27 @@
 	status = "okay";
 };
 
+&flexcomm1_lpspi1 {
+	status = "okay";
+};
+
+
 &flexcomm2 {
+	status = "okay";
+};
+
+&flexcomm2_lpi2c2 {
 	status = "okay";
 };
 
 &flexcomm4 {
 	status = "okay";
 };
+
+&flexcomm4_lpuart4 {
+	status = "okay";
+};
+
 
 &sc_timer {
 	status = "okay";
