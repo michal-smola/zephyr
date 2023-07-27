@@ -1126,7 +1126,8 @@ static const struct uart_driver_api mcux_lpuart_driver_api = {
 #define MCUX_LPUART_IRQ_DEFINE(n)						\
 	static void mcux_lpuart_config_func_##n(const struct device *dev)	\
 	{									\
-		MCUX_LPUART_IRQ_INSTALL(n, 0);				\
+		IF_ENABLED(DT_INST_IRQ_HAS_IDX(n, 0),			\
+			   (MCUX_LPUART_IRQ_INSTALL(n, 0);))		\
 									\
 		IF_ENABLED(DT_INST_IRQ_HAS_IDX(n, 1),			\
 			   (MCUX_LPUART_IRQ_INSTALL(n, 1);))		\
