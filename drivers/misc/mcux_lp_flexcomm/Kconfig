@@ -1,0 +1,14 @@
+# Copyright 2023 NXP
+#
+# SPDX-License-Identifier: Apache-2.0
+
+config MCUX_LP_FLEXCOMM
+	bool "Driver for the NXP Low Power FlexComm Interface"
+	default y
+	depends on DT_HAS_NXP_LP_FLEXCOMM_ENABLED
+	help
+	  Enabled the Low Power FlexComm shim driver.
+	  LP FLexcomm allows enablement of LPUART and LPI2C
+	  at the same time with reduced interface. This driver
+	  checks concurrent enablement and returns and error for
+	  unsupported concurrent enablement.
