@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-&flexcomm1 {
+&flexcomm1_lpspi1 {
 	slow@0 {
 		compatible = "test-spi-loopback-slow";
 		reg = <0>;
