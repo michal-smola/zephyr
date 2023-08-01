@@ -14,7 +14,9 @@
 #include <zephyr/kernel.h>
 #include <zephyr/irq.h>
 #include <fsl_lpi2c.h>
-
+#if CONFIG_MCUX_LP_FLEXCOMM
+#include "mcux_lp_flexcomm.h"
+#endif
 #include <zephyr/drivers/pinctrl.h>
 
 #ifdef CONFIG_I2C_MCUX_LPI2C_BUS_RECOVERY
@@ -39,6 +41,7 @@ LOG_MODULE_REGISTER(mcux_lpi2c);
 
 struct mcux_lpi2c_config {
 	DEVICE_MMIO_NAMED_ROM(reg_base);
+	const struct device *parent_dev;
 	const struct device *clock_dev;
 	clock_control_subsys_t clock_subsys;
 	void (*irq_config_func)(const struct device *dev);
@@ -531,8 +534,16 @@ static int mcux_lpi2c_init(const struct device *dev)
 		return error;
 	}
 
+#if CONFIG_MCUX_LP_FLEXCOMM
+	/* When using LP Flexcomm driver, register the interrupt handler
+	 * so we receive notification from the LP Flexcomm interrupt handler.
+	 */
+	mcux_lpflexcomm_setirqhandler(config->parent_dev, dev,
+				      LP_FLEXCOMM_PERIPH_LPI2C, mcux_lpi2c_isr);
+#else
+	/* Interrupt is managed by this driver */
 	config->irq_config_func(dev);
-
+#endif
 	return 0;
 }
 
@@ -576,6 +587,7 @@ static const struct i2c_driver_api mcux_lpi2c_driver_api = {
 									\
 	static const struct mcux_lpi2c_config mcux_lpi2c_config_##n = {	\
 		DEVICE_MMIO_NAMED_ROM_INIT(reg_base, DT_DRV_INST(n)), \
+		.parent_dev = DEVICE_DT_GET(DT_INST_PARENT(n)),		\
 		.clock_dev = DEVICE_DT_GET(DT_INST_CLOCKS_CTLR(n)),	\
 		.clock_subsys =						\
 			(clock_control_subsys_t)DT_INST_CLOCKS_CELL(n, name),\
