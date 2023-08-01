@@ -21,6 +21,9 @@
 #include <zephyr/logging/log.h>
 
 #include <fsl_lpuart.h>
+#if CONFIG_MCUX_LP_FLEXCOMM
+#include "mcux_lp_flexcomm.h"
+#endif
 
 LOG_MODULE_REGISTER(uart_mcux_lpuart, LOG_LEVEL_ERR);
 
@@ -34,6 +37,7 @@ struct lpuart_dma_config {
 
 struct mcux_lpuart_config {
 	LPUART_Type *base;
+	const struct device *parent_dev;
 	const struct device *clock_dev;
 	const struct pinctrl_dev_config *pincfg;
 	clock_control_subsys_t clock_subsys;
@@ -1066,7 +1070,16 @@ static int mcux_lpuart_init(const struct device *dev)
 	}
 
 #ifdef CONFIG_UART_MCUX_LPUART_ISR_SUPPORT
+#if CONFIG_MCUX_LP_FLEXCOMM
+	/* When using LP Flexcomm driver, register the interrupt handler
+	 * so we receive notification from the LP Flexcomm interrupt handler.
+	 */
+	mcux_lpflexcomm_setirqhandler(config->parent_dev, dev,
+				      LP_FLEXCOMM_PERIPH_LPUART, mcux_lpuart_isr);
+#else
+	/* Interrupt is managed by this driver */
 	config->irq_config_func(dev);
+#endif
 #endif
 
 #ifdef CONFIG_PM
@@ -1199,6 +1212,7 @@ static const struct uart_driver_api mcux_lpuart_driver_api = {
 #define LPUART_MCUX_DECLARE_CFG(n)                                      \
 static const struct mcux_lpuart_config mcux_lpuart_##n##_config = {     \
 	.base = (LPUART_Type *) DT_INST_REG_ADDR(n),                          \
+	.parent_dev = DEVICE_DT_GET(DT_INST_PARENT(n)),                       \
 	.clock_dev = DEVICE_DT_GET(DT_INST_CLOCKS_CTLR(n)),                   \
 	.clock_subsys = (clock_control_subsys_t)DT_INST_CLOCKS_CELL(n, name),	\
 	.baud_rate = DT_INST_PROP(n, current_speed),                          \
