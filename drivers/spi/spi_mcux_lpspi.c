@@ -10,6 +10,9 @@
 #include <zephyr/drivers/spi.h>
 #include <zephyr/drivers/clock_control.h>
 #include <fsl_lpspi.h>
+#if CONFIG_MCUX_LP_FLEXCOMM
+#include "mcux_lp_flexcomm.h"
+#endif
 #include <zephyr/logging/log.h>
 #include <zephyr/irq.h>
 #ifdef CONFIG_SPI_MCUX_LPSPI_DMA
@@ -35,6 +38,7 @@ LOG_MODULE_REGISTER(spi_mcux_lpspi, CONFIG_SPI_LOG_LEVEL);
 
 struct spi_mcux_config {
 	DEVICE_MMIO_NAMED_ROM(reg_base);
+	const struct device *parent_dev;
 	const struct device *clock_dev;
 	clock_control_subsys_t clock_subsys;
 	void (*irq_config_func)(const struct device *dev);
@@ -664,7 +668,15 @@ static int spi_mcux_init(const struct device *dev)
 
 	DEVICE_MMIO_NAMED_MAP(dev, reg_base, K_MEM_CACHE_NONE | K_MEM_DIRECT_MAP);
 
+#if CONFIG_MCUX_LP_FLEXCOMM
+	/* When using LP Flexcomm driver, register the interrupt handler
+	 * so we receive notification from the LP Flexcomm interrupt handler.
+	 */
+	mcux_lpflexcomm_setirqhandler(config->parent_dev, dev,
+				      LP_FLEXCOMM_PERIPH_LPSPI, spi_mcux_isr);
+#else
 	config->irq_config_func(dev);
+#endif
 
 	err = spi_context_cs_configure_all(&data->ctx);
 	if (err < 0) {
@@ -921,6 +933,7 @@ static const struct spi_driver_api spi_mcux_driver_api = {
 									\
 	static const struct spi_mcux_config spi_mcux_config_##n = {	\
 		DEVICE_MMIO_NAMED_ROM_INIT(reg_base, DT_DRV_INST(n)), \
+		.parent_dev = DEVICE_DT_GET(DT_INST_PARENT(n)),		\
 		.clock_dev = DEVICE_DT_GET(DT_INST_CLOCKS_CTLR(n)),	\
 		.clock_subsys =						\
 		(clock_control_subsys_t)DT_INST_CLOCKS_CELL(n, name),	\
