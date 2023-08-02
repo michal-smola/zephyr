@@ -16,6 +16,23 @@
 			drive-open-drain;
 		};
 	};
+
+	pinmux_flexcomm4_lpuart_concurrent: pinmux_flexcomm4_lpuart_concurrent {
+		group0 {
+			pinmux = <FC4_P2_PIO1_10>,
+				<FC4_P3_PIO1_11>;
+			slew-rate = "fast";
+			drive-strength = "low";
+			input-enable;
+		};
+	};
+};
+
+&flexcomm4_lpuart4 {
+	status = "okay";
+	current-speed = <115200>;
+	pinctrl-0 = <&pinmux_flexcomm4_lpuart_concurrent>;
+	pinctrl-names = "default";
 };
 
 /* To test this sample, connect
