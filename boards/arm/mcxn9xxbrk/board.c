@@ -28,9 +28,43 @@ __ramfunc static void enable_lpcac(void)
 	SYSCON->LPCAC_CTRL &= ~(SYSCON_LPCAC_CTRL_CLR_LPCAC_MASK | SYSCON_LPCAC_CTRL_DIS_LPCAC_MASK);
 }
 
+__ramfunc static void enable_cache64(void)
+{
+	/* Make sure the FlexSPI clock is enabled. This is required to access the cache64
+	 * registers. If running from FlexSPI the clock should already be enabled anyway.
+	 */
+	SYSCON->AHBCLKCTRLSET[0] = SYSCON_AHBCLKCTRL0_FLEXSPI_MASK;
+
+	/* Configure the CACHE64_POLSEL */
+
+	/* configure reg0 to cover the whole FlexSPI */
+	CACHE64_POLSEL0->REG0_TOP = 0x7FFC00;
+
+	/* region 0 = write-through
+	 * region 1 = invalid
+	 * region 2 = invalid
+	 */
+	CACHE64_POLSEL0->POLSEL = (CACHE64_POLSEL_POLSEL_REG0_POLICY(1) |
+				   CACHE64_POLSEL_POLSEL_REG1_POLICY(3) |
+				   CACHE64_POLSEL_POLSEL_REG2_POLICY(3));
+
+	/* Configure the CACHE64_CTRL
+	 * Set invaliate bits for both ways
+	 * Set GO bit to start the invalidate
+	 * Enable write buffer - shouldn't matter because we aren't writing
+	 * Enable the cache
+	 */
+	CACHE64_CTRL0->CCR = (CACHE64_CTRL_CCR_INVW0_MASK |
+			      CACHE64_CTRL_CCR_INVW1_MASK |
+			      CACHE64_CTRL_CCR_GO_MASK |
+			      CACHE64_CTRL_CCR_ENWRBUF_MASK |
+			      CACHE64_CTRL_CCR_ENCACHE_MASK);
+}
+
 static int mcxn9xxbrk_init(void)
 {
 	enable_lpcac();
+
 	/* Enable SCG clock */
 	CLOCK_EnableClock(kCLOCK_Scg);
 
@@ -112,6 +146,8 @@ static int mcxn9xxbrk_init(void)
 	CLOCK_SetClkDiv(kCLOCK_DivFlexspiClk, 2U);
 	/* Switch FLEXSPI to PLL0 */
 	CLOCK_AttachClk(kPLL0_to_FLEXSPI);
+	/* Enable CACHE64 for FlexSPI */
+	enable_cache64();
 #endif
 #endif
 
