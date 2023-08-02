@@ -28,6 +28,7 @@ __ramfunc static void enable_lpcac(void)
 	SYSCON->LPCAC_CTRL &= ~(SYSCON_LPCAC_CTRL_CLR_LPCAC_MASK | SYSCON_LPCAC_CTRL_DIS_LPCAC_MASK);
 }
 
+#if !(CONFIG_FLASH_DISABLE_CACHE64)
 __ramfunc static void enable_cache64(void)
 {
 	/* Make sure the FlexSPI clock is enabled. This is required to access the cache64
@@ -60,6 +61,7 @@ __ramfunc static void enable_cache64(void)
 			      CACHE64_CTRL_CCR_ENWRBUF_MASK |
 			      CACHE64_CTRL_CCR_ENCACHE_MASK);
 }
+#endif
 
 static int mcxn9xxbrk_init(void)
 {
@@ -146,8 +148,10 @@ static int mcxn9xxbrk_init(void)
 	CLOCK_SetClkDiv(kCLOCK_DivFlexspiClk, 2U);
 	/* Switch FLEXSPI to PLL0 */
 	CLOCK_AttachClk(kPLL0_to_FLEXSPI);
+#if !(CONFIG_FLASH_DISABLE_CACHE64)
 	/* Enable CACHE64 for FlexSPI */
 	enable_cache64();
+#endif
 #endif
 #endif
 

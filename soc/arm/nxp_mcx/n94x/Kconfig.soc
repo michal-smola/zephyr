@@ -69,4 +69,9 @@ config FLASH_MCUX_FLEXSPI_XIP
 	  Allows for the soc to safely initialize the clocks for the
 	  FlexSpi when planning to execute code in FlexSpi Memory.
 
+config FLASH_DISABLE_CACHE64
+	bool "Disable the CACHE64 cache for FlexSPI flash accesses"
+	help
+	  Disable cache64 cache.
+
 endif # SOC_SERIES_MCX_N94X
