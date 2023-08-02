@@ -19,8 +19,9 @@
 
 
 #ifdef CONFIG_PLATFORM_SPECIFIC_INIT
+
 /* This function is taken from the SDK */
-void system_init(void)
+static void system_init(void)
 {
 #if ((__FPU_PRESENT == 1) && (__FPU_USED == 1))
 	/* set CP10, CP11 Full Access in Secure mode */

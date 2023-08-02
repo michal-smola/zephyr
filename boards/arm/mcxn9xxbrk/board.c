@@ -22,8 +22,15 @@
 /* System clock frequency. */
 extern uint32_t SystemCoreClock;
 
+__ramfunc static void enable_lpcac(void)
+{
+	SYSCON->LPCAC_CTRL |= SYSCON_LPCAC_CTRL_CLR_LPCAC_MASK;
+	SYSCON->LPCAC_CTRL &= ~(SYSCON_LPCAC_CTRL_CLR_LPCAC_MASK | SYSCON_LPCAC_CTRL_DIS_LPCAC_MASK);
+}
+
 static int mcxn9xxbrk_init(void)
 {
+	enable_lpcac();
 	/* Enable SCG clock */
 	CLOCK_EnableClock(kCLOCK_Scg);
 
