@@ -17,6 +17,11 @@
 		};
 	};
 
+	/* Change the pins of the Console LPUART to work simultaneously with I2C.
+	 * Connect the UART bridge to these pins:
+	 * LPUART TX(J2-62, P1_10/FC4_P2)
+	 * LPUART RX(J2-61, P1_11/FC4_P3)
+	 */
 	pinmux_flexcomm4_lpuart_concurrent: pinmux_flexcomm4_lpuart_concurrent {
 		group0 {
 			pinmux = <FC4_P2_PIO1_10>,
@@ -36,8 +41,8 @@
 };
 
 /* To test this sample, connect
- * LPI2C4 SCL(J2-33)     -->         LPI2C2 SCL(J1-45)
- * LPI2C4 SDA(J2-37)     -->         LPI2C2 SDA(J1-46)
+ * LPI2C4 SCL(J1-23, P1_21/FC4_P1)     -->        LPI2C2 SCL(J1-45, P4_1/FC2_P1)
+ * LPI2C4 SDA(J2-42, P1_20/FC4_P0)     -->        LPI2C2 SDA(J1-46, P4_0/FC2_P0)
  */
 &flexcomm4_lpi2c4 {
 	pinctrl-0 = <&pinmux_flexcomm4_lpi2c>;

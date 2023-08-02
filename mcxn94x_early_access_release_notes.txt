@@ -5,7 +5,7 @@ In addition to the prior supported features, support was added for the following
 
 Overview of Supported Features
 ------------------------------
-- Support for concurrent use of UART and I2C
+- Support for concurrent use of UART and I2C in the same Flexcomm instance
 
 
 Zephyr MCXN94X Early Access Release 2.0
