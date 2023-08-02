@@ -1,3 +1,13 @@
+Zephyr MCXN94X Early Access Release 2.1
+=======================================
+
+In addition to the prior supported features, support was added for the following
+
+Overview of Supported Features
+------------------------------
+- Support for concurrent use of UART and I2C
+
+
 Zephyr MCXN94X Early Access Release 2.0
 =======================================
 
