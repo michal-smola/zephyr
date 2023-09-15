@@ -5,6 +5,8 @@
 #include <zephyr/init.h>
 #include <zephyr/device.h>
 #include <fsl_clock.h>
+#include <fsl_spc.h>
+
 #if CONFIG_USB_DC_NXP_EHCI
 #include "usb_phy.h"
 #include "usb.h"
@@ -63,12 +65,38 @@ __ramfunc static void enable_cache64(void)
 }
 #endif
 
+/* Update Active mode voltage for OverDrive mode. */
+void power_mode_od(void)
+{
+	spc_active_mode_dcdc_option_t opt = {
+		.DCDCVoltage       = kSPC_DCDC_OverdriveVoltage,
+		.DCDCDriveStrength = kSPC_DCDC_NormalDriveStrength,
+	};
+	SPC_SetActiveModeDCDCRegulatorConfig(SPC0, &opt);
+
+	spc_sram_voltage_config_t cfg = {
+		.operateVoltage       = kSPC_sramOperateAt1P2V,
+		.requestVoltageUpdate = true,
+	};
+	SPC_SetSRAMOperateVoltage(SPC0, &cfg);
+}
+
 static int mcxn9xxbrk_init(void)
 {
 	enable_lpcac();
 
+	power_mode_od();
+
 	/* Enable SCG clock */
 	CLOCK_EnableClock(kCLOCK_Scg);
+
+	/* FRO OSC setup - begin, enable the FRO for safety switching */
+
+	/* Switch to FRO 12M first to ensure we can change the clock setting */
+	CLOCK_AttachClk(kFRO12M_to_MAIN_CLK);
+
+	/* Set the additional number of flash wait-states */
+	CLOCK_SetFLASHAccessCyclesForFreq(150000000U, kOD_Mode);
 
 	/* Enable FRO HF(48MHz) output */
 	CLOCK_SetupFROHFClocking(48000000U);
