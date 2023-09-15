@@ -1,0 +1,14 @@
+# Copyright 2023 NXP
+# SPDX-License-Identifier: Apache-2.0
+
+
+menuconfig DISPLAY_MCUX_FLEXIO_LCDIF
+	bool "MCUX FlexIO LCDIF driver"
+	default y
+	depends on DT_HAS_NXP_FLEXIO_LCDIF_ENABLED
+	depends on CLOCK_CONTROL
+	select MCUX_FLEXIO
+	select DMA
+	help
+	  Enable support for mcux FlexIO LCDIF driver.
+
