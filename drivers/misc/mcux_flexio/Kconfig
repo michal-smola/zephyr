@@ -1,0 +1,24 @@
+# Copyright (c) 2023, STRIM, ALC
+# SPDX-License-Identifier: Apache-2.0
+
+config MCUX_FLEXIO
+	bool
+	depends on CLOCK_CONTROL
+	help
+	  Enable the FlexIO.
+	  FlexIO is not used separately.
+
+config MCUX_FLEXIO_INIT_PRIORITY
+	int "Init priority"
+	depends on MCUX_FLEXIO
+	default 50
+	help
+	  MCUX FlexIO device driver initialization priority.
+
+config MCUX_FLEXIO_CHILD_INIT_PRIORITY
+	int "Init priority"
+	depends on MCUX_FLEXIO
+	default 51
+	help
+	  MCUX FlexIO Child device driver initialization priority.
+	  Must be greater than MCUX_FLEXIO_INIT_PRIORITY.
