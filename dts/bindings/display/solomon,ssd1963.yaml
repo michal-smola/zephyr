@@ -1,0 +1,50 @@
+# Copyright 2023 NXP
+# SPDX-License-Identifier: Apache-2.0
+
+description: SSD1963 display controller
+
+compatible: "solomon,ssd1963"
+
+include: [lcd-controller.yaml]
+
+properties:
+  reset-gpios:
+    type: phandle-array
+    required: true
+    description: RESET pin.
+      The RESET pin of SSD1963 is active high.
+
+  xtal-frequency:
+    type: int
+    description: |
+      Crystal oscillator input frequency in Hz.
+
+  data-bus-width:
+    type: int
+    required: true
+    enum:
+      - 8
+      - 9
+      - 12
+      - 16
+      - 18
+      - 24
+    description: |
+      Data bus width between the host and SSD1963 controller.
+
+  panel-data-width:
+    type: int
+    default: 0
+    enum:
+      - 0
+      - 1
+    description: |
+      Panel Data width. Default is POR value.
+      0 - 18-bit; 1 - 24-bit.
+
+  nxp,lcdif:
+    type: phandle
+    required: true
+    description: |
+      Instance of the LCDIF peripheral. This will eventually need to be redone
+      so the flexio driver will be a separate parallel display bus driver.
