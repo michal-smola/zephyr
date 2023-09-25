@@ -389,6 +389,11 @@ static int ssd1963_init(const struct device *dev)
 		return -ENODEV;
 	}
 
+	err = gpio_pin_configure_dt(&config->reset_gpio, GPIO_OUTPUT_HIGH);
+	if (err) {
+		return err;
+	}
+
 	/* Reset the SSD1963 LCD controller. */
 	err = gpio_pin_set_dt(&config->reset_gpio, 0);
 	if (err < 0) {

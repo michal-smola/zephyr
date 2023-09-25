@@ -315,19 +315,19 @@ static int flexio_lcdif_init(const struct device *dev)
 		return err;
 	}
 
-	err = gpio_pin_configure_dt(&config->cs_gpio, GPIO_OUTPUT_ACTIVE);
+	err = gpio_pin_configure_dt(&config->cs_gpio, GPIO_OUTPUT_HIGH);
 	if (err) {
 		return err;
 	}
 
-	err = gpio_pin_configure_dt(&config->rs_gpio, GPIO_OUTPUT_ACTIVE);
+	err = gpio_pin_configure_dt(&config->rs_gpio, GPIO_OUTPUT_HIGH);
 	if (err) {
 		return err;
 	}
 
 	/* RDWR GPIO is only used in 68K mode */
 	if (kFLEXIO_MCULCD_6800 == config->flexio_lcd_dev->busType) {
-		err = gpio_pin_configure_dt(&config->rdwr_gpio, GPIO_OUTPUT_ACTIVE);
+		err = gpio_pin_configure_dt(&config->rdwr_gpio, GPIO_OUTPUT_HIGH);
 		if (err) {
 			return err;
 		}
