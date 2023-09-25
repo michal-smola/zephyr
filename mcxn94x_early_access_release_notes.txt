@@ -1,3 +1,16 @@
+Zephyr MCXN94X Early Access Release 2.2
+=======================================
+
+In addition to the prior supported features, this release adds support for the
+following:
+
+ - foundation for display support
+   + FlexIO driver
+   + Clock enablement for LCD
+   + FlexIO LCD
+   + device tree additions
+
+
 Zephyr MCXN94X Early Access Release 2.1
 =======================================
 
