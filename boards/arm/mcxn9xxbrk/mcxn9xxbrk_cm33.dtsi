@@ -40,6 +40,7 @@
 		pixel-format = <PANEL_PIXEL_FORMAT_BGR_565>;
 		xtal-frequency = <10000000>;
 		data-bus-width = <16>;
+		panel-data-width = <1>;
 		nxp,lcdif = <&flexio0_lcd>;
 		width = <800>;
 		height = <480>;
