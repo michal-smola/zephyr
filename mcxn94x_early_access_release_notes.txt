@@ -10,6 +10,10 @@ following:
    + FlexIO LCD
    + device tree additions
 
+Testing Done on Supported Features
+----------------------------------
+- Display was tested using the samples inside samples/drivers/display
+
 
 Zephyr MCXN94X Early Access Release 2.1
 =======================================
