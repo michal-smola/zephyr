@@ -154,7 +154,7 @@ static int ssd1963_write(const struct device *dev, const uint16_t x,
 
 	LOG_DBG("W=%d, H=%d, @%d,%d", desc->width, desc->height, x, y);
 
-	ssd1963_select_area(dev, x, y, desc->width, desc->height);
+	ssd1963_select_area(dev, x, y, x + desc->width -1, y + desc->height - 1);
 
 	flexio_lcdif_write_memory(config->flexio_lcd_dev, SSD1963_WRITE_MEMORY_START,
 				  buf, desc->buf_size);
@@ -428,6 +428,11 @@ static int ssd1963_init(const struct device *dev)
 
 	fpr--;
 
+    /* Soft reset. */
+	flexio_lcdif_write_command(config->flexio_lcd_dev, SSD1963_SOFT_RESET);
+	k_msleep(5);
+
+
 	/* Setup the PLL. */
 	/* Set the multiplier and divider. */
 	command_param[0] = multi;
@@ -486,7 +491,7 @@ static int ssd1963_init(const struct device *dev)
 	flexio_lcdif_write_data(config->flexio_lcd_dev, command_param, 8U);
 
 	/* Vertical period setting. */
-	vt = config->panel_width + config->vsw + config->vfp + config->vbp;
+	vt = config->panel_height + config->vsw + config->vfp + config->vbp;
 	vps = config->vsw + config->vbp;
 	command_param[0] = (uint8_t)((vt - 1U) >> 8U);
 	command_param[1] = (uint8_t)((vt - 1U) & 0xFFU);
