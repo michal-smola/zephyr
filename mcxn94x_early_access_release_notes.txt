@@ -4,7 +4,6 @@ Zephyr MCXN94X Early Access Release 2.2
 In addition to the prior supported features, this release adds support for the
 following:
 
- - foundation for display support
    + FlexIO driver
    + Clock enablement for LCD
    + FlexIO LCD
@@ -13,7 +12,9 @@ following:
 Testing Done on Supported Features
 ----------------------------------
 - Display was tested using the samples inside samples/drivers/display
+  The MIKROE-2406 ([1]) display module was used 
 
+[1] https://www.mikroe.com/tft-proto-5-capacitive-board
 
 Zephyr MCXN94X Early Access Release 2.1
 =======================================
