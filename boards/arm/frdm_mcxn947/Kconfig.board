@@ -1,0 +1,12 @@
+# Copyright 2023 NXP
+# SPDX-License-Identifier: Apache-2.0
+
+config BOARD_FRDM_MCXN947_CPU0
+	bool "NXP MCXN947 [CPU0]"
+	depends on SOC_SERIES_MCX_N94X
+	select SOC_PART_NUMBER_MCXN947VDF
+
+config BOARD_FRDM_MCXN947_CPU1
+	bool "NXP MCXN947 [CPU1]"
+	depends on SOC_SERIES_MCX_N94X
+	select SOC_PART_NUMBER_MCXN947VDF

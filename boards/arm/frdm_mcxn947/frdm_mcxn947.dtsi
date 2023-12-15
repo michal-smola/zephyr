@@ -1,0 +1,158 @@
+/*
+ * Copyright 2023 NXP
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include "frdm_mcxn947-pinctrl.dtsi"
+#include <zephyr/dt-bindings/i2c/i2c.h>
+#include <zephyr/dt-bindings/display/panel.h>
+
+/ {
+	aliases{
+		led0 = &red_led;
+		led1 = &green_led;
+		led2 = &blue_led;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		green_led: led_1 {
+			gpios = <&gpio0 27 GPIO_ACTIVE_LOW>;
+			label = "Green LED";
+			status = "disabled";
+		};
+		blue_led: led_2 {
+			gpios = <&gpio1 2 GPIO_ACTIVE_LOW>;
+			label = "Blue LED";
+			status = "disabled";
+		};
+		red_led: led_3 {
+			gpios = <&gpio0 10 GPIO_ACTIVE_LOW>;
+			label = "Red LED";
+			status = "disabled";
+		};
+	};
+
+	ssd1963_display: ssd1963-display {
+		compatible = "solomon,ssd1963";
+		reset-gpios = <&gpio4 7 GPIO_ACTIVE_HIGH>;
+		pixel-format = <PANEL_PIXEL_FORMAT_BGR_565>;
+		xtal-frequency = <10000000>;
+		data-bus-width = <16>;
+		panel-data-width = <1>;
+		nxp,lcdif = <&flexio0_lcd>;
+		width = <800>;
+		height = <480>;
+		display-timings {
+			compatible = "zephyr,panel-timing";
+			hsync-len = <48>;
+			hfront-porch = <40>;
+			hback-porch = <0>;
+			vsync-len = <3>;
+			vfront-porch = <13>;
+			vback-porch = <18>;
+			hsync-active = <0>;
+			vsync-active = <0>;
+			de-active = <0>;
+			pixelclk-active = <0>;
+			/* Pixel clock */
+			clock-frequency = <30000000>;
+		};
+	};
+};
+
+&edma0 {
+	status = "okay";
+};
+
+&flexcomm1_lpspi1 {
+	pinctrl-0 = <&pinmux_flexcomm1_lpspi>;
+	pinctrl-names = "default";
+};
+
+&flexcomm2_lpi2c2 {
+	pinctrl-0 = <&pinmux_flexcomm2_lpi2c>;
+	pinctrl-names = "default";
+	clock-frequency = <I2C_BITRATE_STANDARD>;
+};
+
+&flexcomm4_lpuart4 {
+	current-speed = <115200>;
+	pinctrl-0 = <&pinmux_flexcomm4_lpuart>;
+	pinctrl-names = "default";
+};
+
+&flash {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		boot_partition: partition@0 {
+			label = "mcuboot";
+			reg = <0x00000000 DT_SIZE_K(64)>;
+		};
+		slot0_partition: partition@10000 {
+			label = "image-0";
+			reg = <0x00010000 DT_SIZE_K(960)>;
+		};
+		slot1_partition: partition@100000 {
+			label = "image-1";
+			reg = <0x00100000 DT_SIZE_K(960)>;
+		};
+		scratch_partition: partition@1f0000 {
+			label = "image-scratch";
+			reg = <0x001f0000 DT_SIZE_K(64)>;
+		};
+	};
+};
+
+/*
+ * MCXN947 board uses OS timer as the kernel timer
+ * In case we need to switch to SYSTICK timer, then
+ * replace &os_timer with &systick
+ */
+&os_timer {
+	status = "okay";
+};
+
+&sc_timer {
+	pinctrl-0 = <&pinmux_sctimer>;
+	pinctrl-names = "default";
+};
+
+&lpadc0 {
+	pinctrl-0 = <&pinmux_lpadc0>;
+	pinctrl-names = "default";
+};
+
+&flexcan0 {
+	bus-speed = <125000>;
+	bus-speed-data = <1000000>;
+	pinctrl-0 = <&pinmux_flexcan0>;
+	pinctrl-names = "default";
+};
+
+&flexio0 {
+	flexio0_lcd: flexio0-lcd {
+		compatible = "nxp,flexio-lcdif";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		/* DMA channels 0, muxed to FlexIO TX */
+		dmas = <&edma0 0 61>;
+		dma-names = "tx";
+		shifters = <0 1 2 3 4 5 6 7>;
+		timers   = <0>;
+		enwr-pin = <1>;
+		rd-pin = <0>;
+		data-pin-start = <16>;
+		bus-type = <0>;
+		/* 16-bit data bus, baud rate on each pin is 1MHz. */
+		baudrate-bps = <160000000>;
+		cs-gpios = <&gpio0 12 GPIO_ACTIVE_HIGH>;
+		rs-gpios = <&gpio0 7 GPIO_ACTIVE_HIGH>;
+		pinctrl-0 = <&pinmux_flexio_lcd>;
+		pinctrl-names = "default";
+	};
+};

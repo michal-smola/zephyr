@@ -1,0 +1,132 @@
+/*
+ * Copyright 2023 NXP
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+
+#include <nxp/mcx/MCXN947VDF-pinctrl.h>
+
+&pinctrl {
+	pinmux_flexcomm1_lpspi: pinmux_flexcomm1_lpspi {
+		group0 {
+			pinmux = <FC1_P0_PIO0_24>,
+				<FC1_P1_PIO0_25>,
+				<FC1_P2_PIO0_26>,
+				<FC1_P3_PIO0_27>;
+			slew-rate = "fast";
+			drive-strength = "low";
+			input-enable;
+		};
+	};
+
+	pinmux_flexcomm2_lpi2c: pinmux_flexcomm2_lpi2c {
+		group0 {
+			pinmux = <FC2_P0_PIO4_0>,
+				<FC2_P1_PIO4_1>;
+			slew-rate = "fast";
+			drive-strength = "low";
+			input-enable;
+			bias-pull-up;
+			drive-open-drain;
+		};
+	};
+
+	pinmux_flexcomm4_lpuart: pinmux_flexcomm4_lpuart {
+		group0 {
+			pinmux = <FC4_P0_PIO1_8>,
+				<FC4_P1_PIO1_9>;
+			slew-rate = "fast";
+			drive-strength = "low";
+			input-enable;
+		};
+	};
+
+	pinmux_sctimer: pinmux_sctimer {
+		group0 {
+			pinmux = <SCT0_OUT4_PIO1_22>;
+			slew-rate = "fast";
+			drive-strength = "low";
+			input-enable;
+		};
+	};
+
+	pinmux_lpadc0: pinmux_lpadc0 {
+		group0 {
+			pinmux = <ADC0_A1_PIO4_15>;
+			slew-rate = "fast";
+			drive-strength = "low";
+		};
+	};
+
+	pinmux_flexspi: pinmux_flexspi {
+		group0 {
+			pinmux = <FLEXSPI0_A_SS0_b_PIO3_0>,
+					<FLEXSPI0_A_SCLK_PIO3_7>,
+					<FLEXSPI0_A_DQS_PIO3_6>,
+					<FLEXSPI0_A_DATA0_PIO3_8>,
+					<FLEXSPI0_A_DATA1_PIO3_9>;
+			input-enable;
+			slew-rate = "fast";
+			drive-strength = "low";
+		};
+		group1 {
+			pinmux = <FLEXSPI0_A_DATA2_PIO3_10>,
+					<FLEXSPI0_A_DATA3_PIO3_11>;
+			input-enable;
+			slew-rate = "fast";
+			drive-strength = "low";
+			bias-pull-up;
+		};
+	};
+
+	pinmux_flexcan0: pinmux_flexcan0 {
+		group0 {
+			pinmux = <CAN0_TXD_PIO1_18>,
+				<CAN0_RXD_PIO1_19>;
+			slew-rate = "fast";
+			drive-strength = "low";
+			input-enable;
+		};
+	};
+
+	pinmux_flexio_lcd: pinmux_flexio_lcd {
+		group0 {
+			pinmux = <FLEXIO0_D16_PIO2_8>,
+				<FLEXIO0_D17_PIO2_9>,
+				<FLEXIO0_D18_PIO2_10>,
+				<FLEXIO0_D19_PIO2_11>,
+				<FLEXIO0_D20_PIO4_12>,
+				<FLEXIO0_D21_PIO4_13>,
+				<FLEXIO0_D22_PIO4_14>,
+				<FLEXIO0_D23_PIO4_15>,
+				<FLEXIO0_D24_PIO4_16>,
+				<FLEXIO0_D25_PIO4_17>,
+				<FLEXIO0_D26_PIO4_18>,
+				<FLEXIO0_D27_PIO4_19>,
+				<FLEXIO0_D28_PIO4_20>,
+				<FLEXIO0_D29_PIO4_21>,
+				<FLEXIO0_D30_PIO4_22>,
+				<FLEXIO0_D31_PIO4_23>,
+				<PIO0_7>,
+				<PIO0_12>,
+				<PIO4_7>;
+			slew-rate = "fast";
+			drive-strength = "low";
+			input-enable;
+		};
+		group1 {
+			pinmux = <FLEXIO0_D0_PIO0_8>;
+			slew-rate = "fast";
+			drive-strength = "low";
+			input-enable;
+			bias-pull-up;
+		};
+		group2 {
+			pinmux = <FLEXIO0_D1_PIO0_9>;
+			slew-rate = "slow";
+			drive-strength = "low";
+			input-enable;
+			bias-pull-up;
+		};
+	};
+};
