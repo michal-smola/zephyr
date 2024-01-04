@@ -72,8 +72,16 @@ def test_check_build_or_run(
     assert run == r
 
     with mock.patch('os.name', 'nt'):
+        # path to QEMU binary is not in PATH
         run = testinstance.check_runnable()
         assert not run
+
+        # path to QEMU binary is in PATH
+        with mock.patch('os.environ', {'PATH': 'C:\\Program Files\\qemu'}):
+            run = testinstance.check_runnable()
+            _, r = expected
+            assert run == r
+
 
 TESTDATA_PART_2 = [
     (True, True, True, ["demo_board_2"], "native",
