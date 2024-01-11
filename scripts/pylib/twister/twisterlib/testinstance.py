@@ -20,6 +20,7 @@ from twisterlib.handlers import (
     SimulationHandler,
     BinaryHandler,
     QEMUHandler,
+    QEMUWinHandler,
     DeviceHandler,
     SUPPORTED_SIMS,
     SUPPORTED_SIMS_IN_PYTEST,
@@ -178,9 +179,13 @@ class TestInstance:
             handler.ready = True
         elif self.platform.simulation != "na":
             if self.platform.simulation == "qemu":
-                handler = QEMUHandler(self, "qemu")
-                handler.args.append(f"QEMU_PIPE={handler.get_fifo()}")
-                handler.ready = True
+                if os.name != "nt":
+                    handler = QEMUHandler(self, "qemu")
+                    handler.args.append(f"QEMU_PIPE={handler.get_fifo()}")
+                    handler.ready = True
+                else:
+                    handler = QEMUWinHandler(self, "qemu")
+                    handler.ready = True
             else:
                 handler = SimulationHandler(self, self.platform.simulation)
 
@@ -204,8 +209,8 @@ class TestInstance:
     # Global testsuite parameters
     def check_runnable(self, enable_slow=False, filter='buildable', fixtures=[], hardware_map=None):
 
-        # running on simulators is currently not supported on Windows
-        if os.name == 'nt' and self.platform.simulation != 'na':
+        # running on simulators is currently supported only for QEMU on Windows
+        if os.name == 'nt' and self.platform.simulation not in ('na', 'qemu'):
             return False
 
         # we asked for build-only on the command line
