@@ -925,6 +925,10 @@ static const struct spi_driver_api spi_mcux_driver_api = {
 	IF_ENABLED(DT_INST_IRQ_HAS_IDX(n, 0),				\
 		(SPI_MCUX_LPSPI_MODULE_IRQ_CONNECT(n)))
 
+#define PARENT_DEV(n)								\
+	COND_CODE_1(DT_NODE_HAS_COMPAT(DT_INST_PARENT(n), nxp_lp_flexcomm),	\
+		(DEVICE_DT_GET(DT_INST_PARENT(n))), (NULL))
+
 #define SPI_MCUX_LPSPI_INIT(n)						\
 	PINCTRL_DT_INST_DEFINE(n);					\
 	COND_CODE_1(CONFIG_SPI_RTIO, (SPI_MCUX_RTIO_DEFINE(n)), ());	\
@@ -933,7 +937,7 @@ static const struct spi_driver_api spi_mcux_driver_api = {
 									\
 	static const struct spi_mcux_config spi_mcux_config_##n = {	\
 		DEVICE_MMIO_NAMED_ROM_INIT(reg_base, DT_DRV_INST(n)), \
-		.parent_dev = DEVICE_DT_GET(DT_INST_PARENT(n)),		\
+		.parent_dev = PARENT_DEV(n),				\
 		.clock_dev = DEVICE_DT_GET(DT_INST_CLOCKS_CTLR(n)),	\
 		.clock_subsys =						\
 		(clock_control_subsys_t)DT_INST_CLOCKS_CELL(n, name),	\

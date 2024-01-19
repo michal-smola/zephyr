@@ -1209,10 +1209,14 @@ static const struct uart_driver_api mcux_lpuart_driver_api = {
 				? UART_CFG_FLOW_CTRL_RS485   \
 				: UART_CFG_FLOW_CTRL_NONE
 
+#define PARENT_DEV(n) \
+	COND_CODE_1(DT_NODE_HAS_COMPAT(DT_INST_PARENT(n), nxp_lp_flexcomm),   \
+		    (DEVICE_DT_GET(DT_INST_PARENT(n))), (NULL))
+
 #define LPUART_MCUX_DECLARE_CFG(n)                                      \
 static const struct mcux_lpuart_config mcux_lpuart_##n##_config = {     \
 	.base = (LPUART_Type *) DT_INST_REG_ADDR(n),                          \
-	.parent_dev = DEVICE_DT_GET(DT_INST_PARENT(n)),                       \
+	.parent_dev = PARENT_DEV(n),                                          \
 	.clock_dev = DEVICE_DT_GET(DT_INST_CLOCKS_CTLR(n)),                   \
 	.clock_subsys = (clock_control_subsys_t)DT_INST_CLOCKS_CELL(n, name),	\
 	.baud_rate = DT_INST_PROP(n, current_speed),                          \
