@@ -70,25 +70,10 @@ void z_arm_platform_init(void)
  */
 static int nxp_mcxn94x_init(void)
 {
-	/* old interrupt lock level */
-	unsigned int oldLevel;
-
-	/* disable interrupts */
-	oldLevel = irq_lock();
-
 	/* SPI cannot be exist with UART or I2C on the same FlexComm Interface
 	 * Throw a build error if user is enabling SPI and UART/I2C on a Flexcomm node.
 	 */
 	DT_FOREACH_STATUS_OKAY(nxp_imx_lpspi, FLEXCOMM_CHECK)
-
-	/*
-	 * install default handler that simply resets the CPU if configured in
-	 * the kernel, NOP otherwise
-	 */
-	NMI_INIT();
-
-	/* restore interrupt state */
-	irq_unlock(oldLevel);
 
 	return 0;
 }
