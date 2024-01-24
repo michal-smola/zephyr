@@ -33,6 +33,28 @@ static int mcux_lpc_syscon_clock_control_on(const struct device *dev,
 	}
 #endif /* defined(CONFIG_COUNTER_NXP_MRT) */
 
+#if defined(CONFIG_PINCTRL_NXP_KINETIS)
+	switch ((uint32_t)sub_system) {
+	case MCUX_PORT0_CLK:
+		CLOCK_EnableClock(kCLOCK_Port0);
+		break;
+	case MCUX_PORT1_CLK:
+		CLOCK_EnableClock(kCLOCK_Port1);
+		break;
+	case MCUX_PORT2_CLK:
+		CLOCK_EnableClock(kCLOCK_Port2);
+		break;
+	case MCUX_PORT3_CLK:
+		CLOCK_EnableClock(kCLOCK_Port3);
+		break;
+	case MCUX_PORT4_CLK:
+		CLOCK_EnableClock(kCLOCK_Port4);
+		break;
+	default:
+		break;
+	}
+#endif /* defined(CONFIG_PINCTRL_NXP_KINETIS) */
+
 	return 0;
 }
 
