@@ -31,8 +31,11 @@ extern uint32_t SystemCoreClock;
 int flash_flexspi_chip_init(const struct device *dev)
 {
 	struct flash_flexspi_nor_data *data = dev->data;
+	struct device memc_dev = data->controller;
+	struct memc_flexspi_data *memc_data = memc_dev.data;
 	int ret = 0;
 	flexspi_transfer_t transfer;
+
 	uint32_t ResetFlashCommandSeq[4] = {
 		[4 * READ_FAST_QUAD_OUTPUT] =
 			FLEXSPI_LUT_SEQ(kFLEXSPI_Command_SDR, kFLEXSPI_1PAD, 0x66,
@@ -54,7 +57,7 @@ int flash_flexspi_chip_init(const struct device *dev)
 					kFLEXSPI_Command_STOP, kFLEXSPI_1PAD, 0x00),
 	};
 
-	memc_flexspi_update_lut(data->controller, 4 * READ_FAST_QUAD_OUTPUT,
+	FLEXSPI_UpdateLUT(memc_data->base, 4 * READ_FAST_QUAD_OUTPUT,
 				ResetFlashCommandSeq, 4);
 
 	/* Write enable */
@@ -65,9 +68,9 @@ int flash_flexspi_chip_init(const struct device *dev)
 
 	transfer.seqIndex = READ_FAST_QUAD_OUTPUT;
 
-	ret = memc_flexspi_transfer(data->controller, &transfer);
+	ret = memc_flexspi_transfer(&data->controller, &transfer);
 
-	memc_flexspi_update_lut(data->controller, 4 * READ_FAST_QUAD_OUTPUT,
+	FLEXSPI_UpdateLUT(memc_data->base, 4 * READ_FAST_QUAD_OUTPUT,
 				FastReadSDRLUTCommandSeq, 4);
 
 	return ret;
