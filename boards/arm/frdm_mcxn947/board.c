@@ -157,9 +157,10 @@ __ramfunc void flexspi_clock_setup(void)
 
 static int frdm_mcxn947_init(void)
 {
-	/* Do not re-run this clock init code if using MCUBoot */
-#ifndef CONFIG_BOOTLOADER_MUCBOOT
 	enable_lpcac();
+
+	/* Do not re-run this clock init code if using MCUBoot */
+#ifndef CONFIG_BOOTLOADER_MCUBOOT
 
 	power_mode_od();
 
