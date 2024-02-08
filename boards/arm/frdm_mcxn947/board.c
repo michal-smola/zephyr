@@ -121,12 +121,21 @@ __ramfunc static void enable_cache64(void)
 /* Update Active mode voltage for OverDrive mode. */
 void power_mode_od(void)
 {
+	/* Set the DCDC VDD regulator to 1.2 V voltage level */
 	spc_active_mode_dcdc_option_t opt = {
 		.DCDCVoltage       = kSPC_DCDC_OverdriveVoltage,
 		.DCDCDriveStrength = kSPC_DCDC_NormalDriveStrength,
 	};
 	SPC_SetActiveModeDCDCRegulatorConfig(SPC0, &opt);
 
+	/* Set the LDO_CORE VDD regulator to 1.2 V voltage level */
+	spc_active_mode_core_ldo_option_t ldo_opt = {
+		.CoreLDOVoltage       = kSPC_CoreLDO_OverDriveVoltage,
+		.CoreLDODriveStrength = kSPC_CoreLDO_NormalDriveStrength,
+	};
+	SPC_SetActiveModeCoreLDORegulatorConfig(SPC0, &ldo_opt);
+
+	/* Specifies the 1.2V operating voltage for the SRAM's read/write timing margin */
 	spc_sram_voltage_config_t cfg = {
 		.operateVoltage       = kSPC_sramOperateAt1P2V,
 		.requestVoltageUpdate = true,
@@ -134,8 +143,22 @@ void power_mode_od(void)
 	SPC_SetSRAMOperateVoltage(SPC0, &cfg);
 }
 
+__ramfunc void flexspi_clock_setup(void)
+{
+	/* Disable the FLEXSPI clock */
+	SYSCON->FLEXSPICLKSEL = 0;
+
+	/* Flexspi frequency 150MHz / 2 = 75MHz */
+	SYSCON->FLEXSPICLKDIV = 1;
+
+	/* Switch FLEXSPI to PLL0 */
+	SYSCON->FLEXSPICLKSEL = 1;
+}
+
 static int frdm_mcxn947_init(void)
 {
+	/* Do not re-run this clock init code if using MCUBoot */
+#ifndef CONFIG_BOOTLOADER_MUCBOOT
 	enable_lpcac();
 
 	power_mode_od();
@@ -148,8 +171,8 @@ static int frdm_mcxn947_init(void)
 	/* Switch to FRO 12M first to ensure we can change the clock setting */
 	CLOCK_AttachClk(kFRO12M_to_MAIN_CLK);
 
-	/* Set the additional number of flash wait-states */
-	CLOCK_SetFLASHAccessCyclesForFreq(150000000U, kOD_Mode);
+	/* Configure Flash wait-states to support 1.2V voltage level and 150000000Hz frequency */
+	FMU0->FCTRL = (FMU0->FCTRL & ~((uint32_t)FMU_FCTRL_RWSC_MASK)) | (FMU_FCTRL_RWSC(0x3U));
 
 	/* Enable FRO HF(48MHz) output */
 	CLOCK_SetupFROHFClocking(48000000U);
@@ -173,6 +196,7 @@ static int frdm_mcxn947_init(void)
 
 	/* Set AHBCLKDIV divider to value 1 */
 	CLOCK_SetClkDiv(kCLOCK_DivAhbClk, 1U);
+#endif /* CONFIG_BOOTLOADER_MUCBOOT */
 
 #if DT_NODE_HAS_STATUS(DT_NODELABEL(flexcomm1), okay)
 	CLOCK_SetClkDiv(kCLOCK_DivFlexcom1Clk, 1u);
@@ -223,17 +247,12 @@ static int frdm_mcxn947_init(void)
 	CLOCK_AttachClk(kFRO_HF_to_SCT);
 #endif
 
-#if !defined(CONFIG_CODE_FLEXSPI)
 #if DT_NODE_HAS_STATUS(DT_NODELABEL(flexspi), okay)
-	/* Flexspi frequency 150MHz / 2 = 75MHz */
-	CLOCK_SetClkDiv(kCLOCK_DivFlexspiClk, 2U);
-	/* Switch FLEXSPI to PLL0 */
-	CLOCK_AttachClk(kPLL0_to_FLEXSPI);
+	flexspi_clock_setup();
 #if !(CONFIG_FLASH_DISABLE_CACHE64)
 	/* Enable CACHE64 for FlexSPI */
 	enable_cache64();
-#endif
-#endif
+#endif /* CONFIG_FLASH_DISABLE_CACHE64 */
 #endif
 
 #if DT_NODE_HAS_STATUS(DT_NODELABEL(lpadc0), okay)
