@@ -7,10 +7,6 @@ config BOARD
 	default "frdm_mcxn947_cpu0" if BOARD_FRDM_MCXN947_CPU0
 	default "frdm_mcxn947_cpu1" if BOARD_FRDM_MCXN947_CPU1
 
-config FLASH_MCUX_FLEXSPI_NOR_SPECIFIC_INIT
-	default y
-	depends on FLASH_MCUX_FLEXSPI_NOR
-
 choice FLASH_MCUX_FLEXSPI_XIP_MEM_TARGET
 	default FLASH_MCUX_FLEXSPI_XIP_MEM_SRAM
 endchoice

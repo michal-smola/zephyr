@@ -24,59 +24,6 @@
 /* System clock frequency. */
 extern uint32_t SystemCoreClock;
 
-#if CONFIG_FLASH_MCUX_FLEXSPI_NOR
-#include "memc_mcux_flexspi.h"
-#include "flash_mcux_flexspi_nor.h"
-
-int flash_flexspi_chip_init(const struct device *dev)
-{
-	struct flash_flexspi_nor_data *data = dev->data;
-	struct device memc_dev = data->controller;
-	struct memc_flexspi_data *memc_data = memc_dev.data;
-	int ret = 0;
-	flexspi_transfer_t transfer;
-
-	uint32_t ResetFlashCommandSeq[4] = {
-		[4 * READ_FAST_QUAD_OUTPUT] =
-			FLEXSPI_LUT_SEQ(kFLEXSPI_Command_SDR, kFLEXSPI_1PAD, 0x66,
-					kFLEXSPI_Command_SDR, kFLEXSPI_1PAD, 0x99),
-		[4 * READ_FAST_QUAD_OUTPUT + 1] =
-			FLEXSPI_LUT_SEQ(kFLEXSPI_Command_STOP, kFLEXSPI_1PAD, 0x00,
-					kFLEXSPI_Command_STOP, kFLEXSPI_1PAD, 0x00),
-	};
-	uint32_t FastReadSDRLUTCommandSeq[4] = {
-		/* Read data */
-		[4 * READ_FAST_QUAD_OUTPUT] =
-			FLEXSPI_LUT_SEQ(kFLEXSPI_Command_SDR, kFLEXSPI_1PAD, 0xEB,
-					kFLEXSPI_Command_RADDR_SDR, kFLEXSPI_4PAD, 0x18),
-		[4 * READ_FAST_QUAD_OUTPUT + 1] =
-			FLEXSPI_LUT_SEQ(kFLEXSPI_Command_MODE8_SDR, kFLEXSPI_4PAD, 0xF0,
-					kFLEXSPI_Command_DUMMY_SDR, kFLEXSPI_4PAD, 0x04),
-		[4 * READ_FAST_QUAD_OUTPUT + 2] =
-			FLEXSPI_LUT_SEQ(kFLEXSPI_Command_READ_SDR, kFLEXSPI_4PAD, 0x00,
-					kFLEXSPI_Command_STOP, kFLEXSPI_1PAD, 0x00),
-	};
-
-	FLEXSPI_UpdateLUT(memc_data->base, 4 * READ_FAST_QUAD_OUTPUT,
-				ResetFlashCommandSeq, 4);
-
-	/* Write enable */
-	transfer.deviceAddress = 0;
-	transfer.port = data->port;
-	transfer.cmdType = kFLEXSPI_Command;
-	transfer.SeqNumber = 1;
-
-	transfer.seqIndex = READ_FAST_QUAD_OUTPUT;
-
-	ret = memc_flexspi_transfer(&data->controller, &transfer);
-
-	FLEXSPI_UpdateLUT(memc_data->base, 4 * READ_FAST_QUAD_OUTPUT,
-				FastReadSDRLUTCommandSeq, 4);
-
-	return ret;
-}
-#endif
-
 __ramfunc static void enable_lpcac(void)
 {
 	SYSCON->LPCAC_CTRL |= SYSCON_LPCAC_CTRL_CLR_LPCAC_MASK;

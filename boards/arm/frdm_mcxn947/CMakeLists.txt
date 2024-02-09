@@ -6,13 +6,6 @@
 
 zephyr_library()
 zephyr_library_sources(board.c)
-zephyr_include_directories(.)
-
-zephyr_library_include_directories_ifdef(
-  CONFIG_FLASH_MCUX_FLEXSPI_NOR
-  ${ZEPHYR_BASE}/drivers/memc
-  ${ZEPHYR_BASE}/drivers/flash
-)
 
 # Data bus width is used by the SDK driver and processes it as a compile time option
 if(CONFIG_DISPLAY_MCUX_FLEXIO_LCDIF)
