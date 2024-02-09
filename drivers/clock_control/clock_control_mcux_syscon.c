@@ -263,15 +263,39 @@ static int mcux_lpc_syscon_clock_control_get_subsys_rate(
 		break;
 #endif /* defined(CONFIG_MCUX_FLEXIO) */
 
+#if defined(CONFIG_MEMC_MCUX_FLEXSPI)
+	case MCUX_FLEXSPI_CLK:
+		*rate = CLOCK_GetFlexspiClkFreq();
+		break;
+#endif /* defined(CONFIG_MCUX_FLEXSPI_CLK) */
+
 	}
 
 	return 0;
+}
+
+static int mcux_lpc_syscon_clock_control_set_subsys_rate(const struct device *dev,
+			clock_control_subsys_t subsys,
+			clock_control_subsys_rate_t rate)
+{
+	uint32_t clock_name = (uintptr_t)subsys;
+	uint32_t clock_rate = (uintptr_t)rate;
+
+	switch (clock_name) {
+	case MCUX_FLEXSPI_CLK:
+		return flexspi_clock_set_freq(clock_name, clock_rate);
+	default:
+		/* Silence unused variable warning */
+		ARG_UNUSED(clock_rate);
+		return -ENOTSUP;
+	}
 }
 
 static const struct clock_control_driver_api mcux_lpc_syscon_api = {
 	.on = mcux_lpc_syscon_clock_control_on,
 	.off = mcux_lpc_syscon_clock_control_off,
 	.get_rate = mcux_lpc_syscon_clock_control_get_subsys_rate,
+	.set_rate = mcux_lpc_syscon_clock_control_set_subsys_rate,
 };
 
 #define LPC_CLOCK_INIT(n) \
