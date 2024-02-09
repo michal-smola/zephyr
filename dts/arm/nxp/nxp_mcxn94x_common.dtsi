@@ -647,6 +647,7 @@
 	#address-cells = <1>;
 	#size-cells = <0>;
 	status = "disabled";
+	clocks = <&syscon MCUX_FLEXSPI_CLK 0 11>;
 };
 
 &nvic {
