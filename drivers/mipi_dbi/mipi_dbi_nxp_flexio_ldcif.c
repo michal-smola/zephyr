@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#define DT_DRV_COMPAT nxp_flexio_lcdif
+#define DT_DRV_COMPAT nxp_mipi_dbi_flexio_lcdif
 
 #include <zephyr/drivers/dma.h>
 #include <zephyr/drivers/display.h>
@@ -12,8 +12,10 @@
 #include <zephyr/drivers/pinctrl.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/drivers/mipi_dbi.h>
 #include <fsl_edma.h>
-#include "display_mcux_flexio_lcdif.h"
+#include "../misc/mcux_flexio/mcux_flexio.h"
+#include <fsl_flexio_mculcd.h>
 
 LOG_MODULE_REGISTER(display_mcux_flexio_lcdif, CONFIG_DISPLAY_LOG_LEVEL);
 
@@ -28,8 +30,11 @@ struct mcux_flexio_lcdif_config {
 	FLEXIO_MCULCD_Type *flexio_lcd_dev;
 	const struct device *flexio_dev;
 	const struct pinctrl_dev_config *pincfg;
+	const struct mcux_flexio_child *child;
 	uint32_t baudrate_bps;
 	uint8_t data_bus_width;
+	/* Reset GPIO */
+	const struct gpio_dt_spec reset;
 	const struct gpio_dt_spec cs_gpio;
 	const struct gpio_dt_spec rs_gpio;
 	const struct gpio_dt_spec rdwr_gpio;
@@ -40,46 +45,14 @@ struct mcux_flexio_lcdif_data {
 	struct k_sem transfer_done;
 };
 
-int flexio_lcdif_isr(const struct device *dev)
+static int flexio_lcdif_isr(const struct device *dev)
 {
 	/* We use DMA for transfer, no interrupt used */
 	return 0;
 }
 
-void flexio_lcdif_res(const struct device *dev, struct mcux_flexio_child_res *child_res)
-{
-	const struct mcux_flexio_lcdif_config *config = dev->config;
-	int i;
-
-	if (child_res != NULL && config != NULL) {
-		child_res->pin = (1 << config->flexio_lcd_dev->ENWRPinIndex) |
-				 (1 << config->flexio_lcd_dev->RDPinIndex);
-		for (i = config->flexio_lcd_dev->dataPinStartIndex;
-		     i < config->flexio_lcd_dev->dataPinStartIndex + config->data_bus_width;
-		     i++) {
-			child_res->pin |= (1 << i);
-		}
-
-		child_res->num_pin = config->data_bus_width + 2;
-
-		for (i = config->flexio_lcd_dev->txShifterStartIndex;
-		     i <= config->flexio_lcd_dev->txShifterEndIndex;
-		     i++) {
-			child_res->shifter |= (1 << i);
-		}
-
-		child_res->num_shifter = config->flexio_lcd_dev->txShifterEndIndex -
-				config->flexio_lcd_dev->txShifterStartIndex + 1;
-
-		child_res->timer = (1 << config->flexio_lcd_dev->timerIndex);
-		child_res->num_timer = 1;
-	} else {
-		LOG_ERR("%s: Error args", __func__);
-	}
-}
-
 static void flexio_lcdif_dma_callback(const struct device *dev, void *arg,
-			 uint32_t channel, int status)
+				      int32_t channel, int status)
 {
 	const struct device *flexio_dev = (struct device *)arg;
 	struct mcux_flexio_lcdif_data *lcdif_data = flexio_dev->data;
@@ -150,96 +123,9 @@ static edma_modulo_t flexio_lcdif_get_edma_modulo(uint8_t shifterNum)
 	return ret;
 }
 
-int flexio_lcdif_write_memory(const struct device *dev, uint32_t command,
-			const void *data, uint32_t len_byte)
-{
-	const struct mcux_flexio_lcdif_config *config = dev->config;
-	struct mcux_flexio_lcdif_data *lcdif_data = dev->data;
-	FLEXIO_MCULCD_Type *flexio_lcd = config->flexio_lcd_dev;
-	struct dma_block_config *blk_cfg;
-	struct stream *stream = &lcdif_data->dma_tx;
-	const struct mcux_flexio_api *flexio_api = config->flexio_dev->api;
-	uint8_t num_of_shifters = 0;
-
-	num_of_shifters = (flexio_lcd->txShifterEndIndex - flexio_lcd->txShifterStartIndex + 1);
-
-	blk_cfg = &stream->dma_blk_cfg;
-
-	/* Assert the nCS. */
-	FLEXIO_MCULCD_StartTransfer(config->flexio_lcd_dev);
-
-	flexio_api->lock(config->flexio_dev);
-	/* Send the command. */
-	FLEXIO_MCULCD_WriteCommandBlocking(config->flexio_lcd_dev, command);
-	flexio_api->unlock(config->flexio_dev);
-
-	/* prepare the block for this TX DMA channel */
-	memset(blk_cfg, 0, sizeof(struct dma_block_config));
-
-	/* tx direction has memory as source and periph as dest. */
-	blk_cfg->source_address = (uint32_t)data;
-
-	/* Destination is FLEXIO Shifters */
-	blk_cfg->dest_address = FLEXIO_MCULCD_GetTxDataRegisterAddress(flexio_lcd);
-	blk_cfg->block_size = len_byte;
-	/* Transfer in each DMA loop is based on the number of shifters used */
-	stream->dma_cfg.source_burst_length = num_of_shifters * 4;
-
-	stream->dma_cfg.head_block = &stream->dma_blk_cfg;
-	/* Give the client dev as arg, as the callback comes from the dma */
-	stream->dma_cfg.user_data = (struct device *)dev;
-
-	/* Configure the DMA */
-	dma_config(lcdif_data->dma_tx.dma_dev, lcdif_data->dma_tx.channel, &stream->dma_cfg);
-
-	/* The DMA driver does not support setting this Modulo value which is required
-	 * in case of the flexio module to form a circular chain between the Shift buffer
-	 * in the FLEXIO module.
-	 * TODO: Look to move this into the Zephyr EDMA HAL
-	 */
-	EDMA_SetModulo(DMA0, lcdif_data->dma_tx.channel, kEDMA_ModuloDisable,
-			flexio_lcdif_get_edma_modulo(num_of_shifters));
-
-	/* For 6800, de-assert the RDWR pin. */
-	if (kFLEXIO_MCULCD_6800 == flexio_lcd->busType) {
-		flexio_lcdif_set_rd_wr(false, (void *)dev);
-	}
-
-	flexio_api->lock(config->flexio_dev);
-	FLEXIO_MCULCD_SetMultiBeatsWriteConfig(flexio_lcd);
-	FLEXIO_MCULCD_EnableTxDMA(flexio_lcd, true);
-	flexio_api->unlock(config->flexio_dev);
-
-	/* Start the data transfer */
-	dma_start(lcdif_data->dma_tx.dma_dev, lcdif_data->dma_tx.channel);
-
-	/* Wait for transfer done. */
-	k_sem_take(&lcdif_data->transfer_done, K_FOREVER);
-
-	return 0;
-}
-
-int flexio_lcdif_write_command(const struct device *dev, uint32_t command)
-{
-	const struct mcux_flexio_lcdif_config *config = dev->config;
-	FLEXIO_MCULCD_Type *flexio_lcd = config->flexio_lcd_dev;
-	const struct mcux_flexio_api *flexio_api = config->flexio_dev->api;
-
-	FLEXIO_MCULCD_StartTransfer(flexio_lcd);
-
-	flexio_api->lock(config->flexio_dev);
-	FLEXIO_MCULCD_WriteCommandBlocking(flexio_lcd, command);
-	flexio_api->unlock(config->flexio_dev);
-
-	FLEXIO_MCULCD_StopTransfer(flexio_lcd);
-
-	return kStatus_Success;
-}
-
-
 static void flexio_lcdif_write_data_array(FLEXIO_MCULCD_Type *base,
-		const void *data,
-		size_t size)
+					  const void *data,
+					  size_t size)
 {
 	assert(size > 0U);
 
@@ -274,46 +160,114 @@ static void flexio_lcdif_write_data_array(FLEXIO_MCULCD_Type *base,
 	FLEXIO_MCULCD_ClearSingleBeatWriteConfig(base);
 }
 
-int flexio_lcdif_write_data(const struct device *dev, void *data, uint32_t len_byte)
+static int mipi_dbi_flexio_ldcif_write_display(const struct device *dev,
+					       const struct mipi_dbi_config *dbi_config,
+					       const uint8_t *framebuf,
+					       struct display_buffer_descriptor *desc,
+					       enum display_pixel_format pixfmt)
+{
+	const struct mcux_flexio_lcdif_config *config = dev->config;
+	struct mcux_flexio_lcdif_data *lcdif_data = dev->data;
+	FLEXIO_MCULCD_Type *flexio_lcd = config->flexio_lcd_dev;
+	struct dma_block_config *blk_cfg;
+	struct stream *stream = &lcdif_data->dma_tx;
+	uint8_t num_of_shifters = 0;
+
+	ARG_UNUSED(pixfmt);
+	ARG_UNUSED(dbi_config);
+
+	num_of_shifters = (flexio_lcd->txShifterEndIndex - flexio_lcd->txShifterStartIndex + 1);
+
+	blk_cfg = &stream->dma_blk_cfg;
+
+	/* Assert the nCS. */
+	FLEXIO_MCULCD_StartTransfer(config->flexio_lcd_dev);
+
+	/* prepare the block for this TX DMA channel */
+	memset(blk_cfg, 0, sizeof(struct dma_block_config));
+
+	/* tx direction has memory as source and periph as dest. */
+	blk_cfg->source_address = (uint32_t)framebuf;
+
+	/* Destination is FLEXIO Shifters */
+	blk_cfg->dest_address = FLEXIO_MCULCD_GetTxDataRegisterAddress(flexio_lcd);
+	blk_cfg->block_size = desc->buf_size;
+	/* Transfer in each DMA loop is based on the number of shifters used */
+	stream->dma_cfg.source_burst_length = num_of_shifters * 4;
+
+	stream->dma_cfg.head_block = &stream->dma_blk_cfg;
+	/* Give the client dev as arg, as the callback comes from the dma */
+	stream->dma_cfg.user_data = (struct device *)dev;
+
+	/* Configure the DMA */
+	dma_config(lcdif_data->dma_tx.dma_dev, lcdif_data->dma_tx.channel, &stream->dma_cfg);
+
+	/* The DMA driver does not support setting this Modulo value which is required
+	 * in case of the flexio module to form a circular chain between the Shift buffer
+	 * in the FLEXIO module.
+	 * TODO: Look to move this into the Zephyr EDMA HAL
+	 */
+	EDMA_SetModulo(DMA0, lcdif_data->dma_tx.channel, kEDMA_ModuloDisable,
+			flexio_lcdif_get_edma_modulo(num_of_shifters));
+
+	/* For 6800, de-assert the RDWR pin. */
+	if (kFLEXIO_MCULCD_6800 == flexio_lcd->busType) {
+		flexio_lcdif_set_rd_wr(false, (void *)dev);
+	}
+
+	mcux_flexio_lock(config->flexio_dev);
+	FLEXIO_MCULCD_SetMultiBeatsWriteConfig(flexio_lcd);
+	FLEXIO_MCULCD_EnableTxDMA(flexio_lcd, true);
+	mcux_flexio_unlock(config->flexio_dev);
+
+	/* Start the data transfer */
+	dma_start(lcdif_data->dma_tx.dma_dev, lcdif_data->dma_tx.channel);
+
+	/* Wait for transfer done. */
+	k_sem_take(&lcdif_data->transfer_done, K_FOREVER);
+
+	return 0;
+}
+
+static int mipi_dbi_flexio_lcdif_command_write(const struct device *dev,
+					       const struct mipi_dbi_config *dbi_config,
+					       uint8_t cmd, const uint8_t *data_buf,
+					       size_t len)
 {
 	const struct mcux_flexio_lcdif_config *config = dev->config;
 	FLEXIO_MCULCD_Type *flexio_lcd = config->flexio_lcd_dev;
-	const struct mcux_flexio_api *flexio_api = config->flexio_dev->api;
+
+	ARG_UNUSED(dbi_config);
 
 	FLEXIO_MCULCD_StartTransfer(flexio_lcd);
 
-	flexio_api->lock(config->flexio_dev);
-	flexio_lcdif_write_data_array(flexio_lcd, data, len_byte);
-	flexio_api->unlock(config->flexio_dev);
+	mcux_flexio_lock(config->flexio_dev);
+
+	FLEXIO_MCULCD_WriteCommandBlocking(flexio_lcd, cmd);
+
+	if ((data_buf != NULL) && (len != 0)) {
+		flexio_lcdif_write_data_array(flexio_lcd, data_buf, len);
+	}
+
+	mcux_flexio_unlock(config->flexio_dev);
 
 	FLEXIO_MCULCD_StopTransfer(flexio_lcd);
 
 	return kStatus_Success;
+
 }
 
-static int flexio_lcdif_init(const struct device *dev)
+static int mipi_dbi_flexio_lcdif_reset(const struct device *dev,
+				       const struct mipi_dbi_config *dbi_config,
+				       uint32_t delay)
 {
 	const struct mcux_flexio_lcdif_config *config = dev->config;
-	struct mcux_flexio_lcdif_data *lcdif_data = dev->data;
-	int err;
 	flexio_mculcd_config_t flexioMcuLcdConfig;
-	const struct mcux_flexio_api *flexio_api = config->flexio_dev->api;
+	int err;
 	uint32_t clock_freq;
 	status_t status;
 
-	if (!device_is_ready(config->flexio_dev)) {
-		return -ENODEV;
-	}
-
-	if (!device_is_ready(lcdif_data->dma_tx.dma_dev)) {
-		LOG_ERR("%s device is not ready", lcdif_data->dma_tx.dma_dev->name);
-		return -ENODEV;
-	}
-
-	err = pinctrl_apply_state(config->pincfg, PINCTRL_STATE_DEFAULT);
-	if (err) {
-		return err;
-	}
+	config->flexio_lcd_dev->busType = dbi_config->mode;
 
 	err = gpio_pin_configure_dt(&config->cs_gpio, GPIO_OUTPUT_HIGH);
 	if (err) {
@@ -326,7 +280,7 @@ static int flexio_lcdif_init(const struct device *dev)
 	}
 
 	/* RDWR GPIO is only used in 68K mode */
-	if (kFLEXIO_MCULCD_6800 == config->flexio_lcd_dev->busType) {
+	if (MIPI_DBI_MODE_6800_BUS == config->flexio_lcd_dev->busType) {
 		err = gpio_pin_configure_dt(&config->rdwr_gpio, GPIO_OUTPUT_HIGH);
 		if (err) {
 			return err;
@@ -335,29 +289,100 @@ static int flexio_lcdif_init(const struct device *dev)
 
 	FLEXIO_MCULCD_GetDefaultConfig(&flexioMcuLcdConfig);
 	flexioMcuLcdConfig.baudRate_Bps = config->baudrate_bps;
-	/* Pass the FlexIO LCD device as paramter to the function
-	 * callbacks for setting GPIO signals.
-	 */
-	config->flexio_lcd_dev->userData = (void *)dev;
 
-	if (flexio_api->get_rate(config->flexio_dev, &clock_freq)) {
+	if (mcux_flexio_get_rate(config->flexio_dev, &clock_freq)) {
 		return -EINVAL;
 	}
 
-	flexio_api->lock(config->flexio_dev);
+	mcux_flexio_lock(config->flexio_dev);
+	/* Resets the FlexIO module, then configures FlexIO MCULCD */
 	status = FLEXIO_MCULCD_Init(config->flexio_lcd_dev, &flexioMcuLcdConfig, clock_freq);
-	flexio_api->unlock(config->flexio_dev);
+	mcux_flexio_unlock(config->flexio_dev);
 
 	if (kStatus_Success != status) {
 		return -EINVAL;
 	}
 
-	k_sem_init(&lcdif_data->transfer_done, 0, 1);
+	/* Checkf if a reset port is provided to reset the LCD controller */
+	if (config->reset.port == NULL) {
+		return 0;
+	}
 
-	LOG_DBG("%s device is ready", dev->name);
+	/* Reset the LCD controller. */
+	err = gpio_pin_configure_dt(&config->reset, GPIO_OUTPUT_HIGH);
+	if (err) {
+		return err;
+	}
+
+	err = gpio_pin_set_dt(&config->reset, 0);
+	if (err < 0) {
+		return err;
+	}
+
+	k_usleep(delay);
+
+	err = gpio_pin_set_dt(&config->reset, 1);
+	if (err < 0) {
+		return err;
+	}
+
+	LOG_DBG("%s device reset complete", dev->name);
 
 	return 0;
 }
+
+static int flexio_lcdif_init(const struct device *dev)
+{
+	const struct mcux_flexio_lcdif_config *config = dev->config;
+	struct mcux_flexio_lcdif_data *lcdif_data = dev->data;
+	int err;
+	uint8_t shifter_end = config->child->res.shifter_count - 1;
+
+	if (!device_is_ready(lcdif_data->dma_tx.dma_dev)) {
+		LOG_ERR("%s device is not ready", lcdif_data->dma_tx.dma_dev->name);
+		return -ENODEV;
+	}
+
+	err = mcux_flexio_child_attach(config->flexio_dev, config->child);
+	if (err < 0) {
+		return err;
+	}
+
+	config->flexio_lcd_dev->txShifterStartIndex = config->child->res.shifter_index[0];
+	config->flexio_lcd_dev->txShifterEndIndex = config->child->res.shifter_index[shifter_end];
+
+	config->flexio_lcd_dev->rxShifterStartIndex = config->flexio_lcd_dev->txShifterStartIndex;
+	config->flexio_lcd_dev->rxShifterEndIndex = config->flexio_lcd_dev->txShifterEndIndex;
+
+	config->flexio_lcd_dev->timerIndex = config->child->res.timer_index[0];
+
+	if (config->flexio_lcd_dev->txShifterEndIndex !=
+	    config->flexio_lcd_dev->txShifterStartIndex + shifter_end) {
+		LOG_ERR("Shifters should be continuous");
+		return -ENODEV;
+	}
+	err = pinctrl_apply_state(config->pincfg, PINCTRL_STATE_DEFAULT);
+	if (err) {
+		return err;
+	}
+
+	/* Pass the FlexIO LCD device as paramter to the function
+	 * callbacks for setting GPIO signals.
+	 */
+	config->flexio_lcd_dev->userData = (void *)dev;
+
+	k_sem_init(&lcdif_data->transfer_done, 0, 1);
+
+	LOG_DBG("%s device init complete", dev->name);
+
+	return 0;
+}
+
+static struct mipi_dbi_driver_api mipi_dbi_lcdif_driver_api = {
+	.reset = mipi_dbi_flexio_lcdif_reset,
+	.command_write = mipi_dbi_flexio_lcdif_command_write,
+	.write_display = mipi_dbi_flexio_ldcif_write_display,
+};
 
 /* The width is read from device tree by the CMake file and passed in as a
  * compile time define
@@ -372,32 +397,40 @@ static int flexio_lcdif_init(const struct device *dev)
 
 #define MCUX_FLEXIO_LCDIF_DEVICE_INIT(n)						\
 											\
-	PINCTRL_DT_INST_DEFINE(n);					\
+	PINCTRL_DT_INST_DEFINE(n);							\
 											\
 	static FLEXIO_MCULCD_Type flexio_mculcd_##n = {					\
 		.flexioBase = (FLEXIO_Type *)DT_REG_ADDR(DT_INST_PARENT(n)),		\
-		.busType = DT_INST_PROP(n, bus_type),					\
 		.dataPinStartIndex = DT_INST_PROP(n, data_pin_start),			\
 		.ENWRPinIndex = DT_INST_PROP(n, enwr_pin),				\
 		.RDPinIndex = DT_INST_PROP_OR(n, rd_pin, 0),				\
-		.txShifterStartIndex = DT_INST_PROP_BY_IDX(n, shifters, 0), 		\
-		.txShifterEndIndex = DT_INST_PROP_BY_IDX(n, shifters, 0) +		\
-				     DT_INST_PROP_LEN(n, shifters) - 1, 		\
-		.rxShifterStartIndex = DT_INST_PROP_BY_IDX(n, shifters, 0), 		\
-		.rxShifterEndIndex = DT_INST_PROP_BY_IDX(n, shifters, 0) + 		\
-				     DT_INST_PROP_LEN(n, shifters), 			\
-		.timerIndex = DT_INST_PROP_BY_IDX(n, timers, 0),			\
 		.setCSPin = flexio_lcdif_set_cs,					\
 		.setRSPin = flexio_lcdif_set_rs,					\
 		.setRDWRPin = flexio_lcdif_set_rd_wr,					\
+	};										\
+											\
+	static uint8_t mcux_flexio_lcdif_shifters_##n[DT_INST_PROP(n, shifters_count)];	\
+	static uint8_t mcux_flexio_lcdif_timers_##n[DT_INST_PROP(n, timers_count)];	\
+											\
+	static const struct mcux_flexio_child lcdif_child_##n = {			\
+		.isr = flexio_lcdif_isr,						\
+		.user_data = (void *)DEVICE_DT_INST_GET(n),				\
+		.res = {								\
+			.shifter_index = mcux_flexio_lcdif_shifters_##n,		\
+			.shifter_count = ARRAY_SIZE(mcux_flexio_lcdif_shifters_##n),	\
+			.timer_index = mcux_flexio_lcdif_timers_##n,			\
+			.timer_count = ARRAY_SIZE(mcux_flexio_lcdif_timers_##n),	\
+		}									\
 	};										\
 											\
 	struct mcux_flexio_lcdif_config mcux_flexio_lcdif_config_##n = {		\
 		.flexio_lcd_dev = &flexio_mculcd_##n,					\
 		.flexio_dev = DEVICE_DT_GET(DT_INST_PARENT(n)), 			\
 		.pincfg = PINCTRL_DT_INST_DEV_CONFIG_GET(n),				\
+		.child = &mcux_flexio_ldcif_child_##n,					\
 		.baudrate_bps = DT_INST_PROP(n, baudrate_bps),				\
 		MCUX_FLEXIO_DATA_BUS_WIDTH						\
+		.reset = GPIO_DT_SPEC_INST_GET(n, reset_gpios),				\
 		.cs_gpio = GPIO_DT_SPEC_INST_GET(n, cs_gpios),				\
 		.rs_gpio = GPIO_DT_SPEC_INST_GET(n, rs_gpios),				\
 		.rdwr_gpio = GPIO_DT_SPEC_INST_GET_OR(n, rdwr_gpios, {0}),		\
@@ -417,12 +450,12 @@ static int flexio_lcdif_init(const struct device *dev)
 		},									\
 	};										\
 	DEVICE_DT_INST_DEFINE(n,							\
-		&flexio_lcdif_init,						\
+		&flexio_lcdif_init,							\
 		NULL,									\
 		&mcux_flexio_lcdif_data_##n,						\
 		&mcux_flexio_lcdif_config_##n,						\
 		POST_KERNEL,								\
 		CONFIG_MCUX_FLEXIO_CHILD_INIT_PRIORITY,					\
-		NULL);
+		&mipi_dbi_lcdif_driver_api);
 
 DT_INST_FOREACH_STATUS_OKAY(MCUX_FLEXIO_LCDIF_DEVICE_INIT)

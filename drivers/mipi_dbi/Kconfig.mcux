@@ -1,0 +1,13 @@
+# Copyright 2024 NXP
+# SPDX-License-Identifier: Apache-2.0
+
+config MIPI_DBI_MCUX_FLEXIO
+	bool "MIPI DBI MCUX driver"
+	default y
+	depends on DT_HAS_NXP_MIPI_DBI_FLEXIO_LCDIF_ENABLED
+	select MCUX_FLEXIO
+	help
+	  Enable support for MIPI DBI SPI driver. This driver implements
+	  a MIPI-DBI mode C compatible controller using a SPI device, as well
+	  as GPIO outputs for the reset and D/C signals
+

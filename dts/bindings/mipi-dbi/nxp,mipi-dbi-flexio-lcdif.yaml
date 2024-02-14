@@ -1,13 +1,25 @@
-# Copyright 2023 NXP
+# Copyright 2024 NXP
 # SPDX-License-Identifier: Apache-2.0
 
 description: NXP FlexIO LCD controller
 
-compatible: "nxp,flexio-lcdif"
+compatible: "nxp,mipi-dbi-flexio-lcdif"
 
-include: [base.yaml, imx-flexio-common.yaml]
+include: ["mipi-dbi-controller.yaml", base.yaml]
 
 properties:
+  shifters_count:
+    type: int
+    required: true
+    description: |
+      Number of FlexIO shifters needed.
+
+  timers_count:
+    type: int
+    required: true
+    description: |
+      Number of FlexIO timers needed.
+
   enwr-pin:
     type: int
     required: true
@@ -24,16 +36,6 @@ properties:
     required: true
     description: |
       Start index of the data pin.
-
-  bus-type:
-    type: int
-    required: true
-    enum:
-      - 0 # Using Intel 8080 bus
-      - 1 # Using MOtorola 6800 bus.
-    description: |
-      The Motorola 68K and Intel 8080 bus are two parallel interfaces
-      commonly used by LCD controllers.
 
   baudrate-bps:
     type: int
@@ -60,3 +62,8 @@ properties:
     description: |
       RDWR Pin
       GPIO to drive the RDWR pin. This is required for Motorola 68K bus.
+
+  reset-gpios:
+    type: phandle-array
+    description: |
+      Reset GPIO pin.

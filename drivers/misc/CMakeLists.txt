@@ -10,4 +10,3 @@ add_subdirectory_ifdef(CONFIG_DEVMUX devmux)
 add_subdirectory_ifdef(CONFIG_NORDIC_VPR_LAUNCHER nordic_vpr_launcher)
 add_subdirectory_ifdef(CONFIG_MCUX_LP_FLEXCOMM mcux_lp_flexcomm)
 add_subdirectory_ifdef(CONFIG_MCUX_FLEXIO mcux_flexio)
-

@@ -10,7 +10,7 @@
 #include <zephyr/drivers/pinctrl.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/kernel.h>
-#include "display_mcux_flexio_lcdif.h"
+#include <zephyr/drivers/mipi_dbi.h>
 #include "ssd1963_regs.h"
 
 #include <zephyr/logging/log.h>
@@ -19,7 +19,7 @@ LOG_MODULE_REGISTER(ssd1963, CONFIG_DISPLAY_LOG_LEVEL);
 
 struct ssd1963_config {
 	const struct device *flexio_lcd_dev;
-	const struct gpio_dt_spec reset_gpio;
+	struct mipi_dbi_config dbi_config;
 	uint8_t bus_width;
 	uint8_t pixel_format;
 	uint32_t xtal_frequency;
@@ -40,6 +40,7 @@ struct ssd1963_config {
 
 struct ssd1963_data {
 	uint8_t addr_mode;
+	enum display_pixel_format pixel_format;
 };
 
 static void ssd1963_set_backlight(const struct device *dev, uint8_t value)
@@ -54,15 +55,17 @@ static void ssd1963_set_backlight(const struct device *dev, uint8_t value)
 	 */
 	uint8_t command_param[] = {0x06U, value, 0x01U, 0xFFU, 0x00U, 0x01U};
 
-	flexio_lcdif_write_command(config->flexio_lcd_dev, SSD1963_SET_PWM_CONF);
-	flexio_lcdif_write_data(config->flexio_lcd_dev, command_param, sizeof(command_param));
+	mipi_dbi_command_write(config->flexio_lcd_dev, &config->dbi_config,
+			       SSD1963_SET_PWM_CONF, command_param, sizeof(command_param));
 }
 
 static int ssd1963_blanking_off(const struct device *dev)
 {
 	const struct ssd1963_config *config = dev->config;
 
-	flexio_lcdif_write_command(config->flexio_lcd_dev, SSD1963_SET_DISPLAY_ON);
+	mipi_dbi_command_write(config->flexio_lcd_dev, &config->dbi_config,
+			       SSD1963_SET_DISPLAY_ON, NULL, 0);
+
 	ssd1963_set_backlight(dev, 255);
 
 	return 0;
@@ -72,7 +75,8 @@ static int ssd1963_blanking_on(const struct device *dev)
 {
 	const struct ssd1963_config *config = dev->config;
 
-	flexio_lcdif_write_command(config->flexio_lcd_dev, SSD1963_SET_DISPLAY_OFF);
+	mipi_dbi_command_write(config->flexio_lcd_dev, &config->dbi_config,
+			       SSD1963_SET_DISPLAY_OFF, NULL, 0);
 
 	return 0;
 }
@@ -130,8 +134,8 @@ static int ssd1963_select_area(const struct device *dev, const uint16_t start_x,
 	command_param[2] = (uint8_t)((ep & 0xFF00U) >> 8U);
 	command_param[3] = (uint8_t)(ep & 0xFFU);
 
-	flexio_lcdif_write_command(config->flexio_lcd_dev, SSD1963_SET_PAGE_ADDRESS);
-	flexio_lcdif_write_data(config->flexio_lcd_dev, command_param, 4U);
+	mipi_dbi_command_write(config->flexio_lcd_dev, &config->dbi_config,
+			       SSD1963_SET_PAGE_ADDRESS, command_param, 4U);
 
 	/* Send the set_column_address command. */
 	command_param[0] = (uint8_t)((sc & 0xFF00U) >> 8U);
@@ -139,8 +143,8 @@ static int ssd1963_select_area(const struct device *dev, const uint16_t start_x,
 	command_param[2] = (uint8_t)((ec & 0xFF00U) >> 8U);
 	command_param[3] = (uint8_t)(ec & 0xFFU);
 
-	flexio_lcdif_write_command(config->flexio_lcd_dev, SSD1963_SET_COLUMN_ADDRESS);
-	flexio_lcdif_write_data(config->flexio_lcd_dev, command_param, 4U);
+	mipi_dbi_command_write(config->flexio_lcd_dev, &config->dbi_config,
+			       SSD1963_SET_COLUMN_ADDRESS, command_param, 4U);
 
 	return 0;
 }
@@ -151,13 +155,17 @@ static int ssd1963_write(const struct device *dev, const uint16_t x,
 			 const void *buf)
 {
 	const struct ssd1963_config *config = dev->config;
+	struct ssd1963_data *lcd_data = dev->data;
 
 	LOG_DBG("W=%d, H=%d, @%d,%d", desc->width, desc->height, x, y);
 
 	ssd1963_select_area(dev, x, y, x + desc->width -1, y + desc->height - 1);
 
-	flexio_lcdif_write_memory(config->flexio_lcd_dev, SSD1963_WRITE_MEMORY_START,
-				  buf, desc->buf_size);
+	mipi_dbi_command_write(config->flexio_lcd_dev, &config->dbi_config,
+			       SSD1963_WRITE_MEMORY_START, NULL, 0);
+
+	mipi_dbi_write_display(config->flexio_lcd_dev, &config->dbi_config,
+			       buf, desc, lcd_data->pixel_format)
 
 	return 0;
 }
@@ -202,11 +210,10 @@ static void ssd1963_get_capabilities(const struct device *dev,
 	caps->y_resolution = config->panel_height;
 	caps->supported_pixel_formats = (PIXEL_FORMAT_BGR_565 | PIXEL_FORMAT_RGB_565);
 
-	if (lcd_data->addr_mode & SSD1963_ADDR_MODE_BGR) {
-		caps->current_pixel_format = PIXEL_FORMAT_BGR_565;
-	} else {
-		caps->current_pixel_format = PIXEL_FORMAT_RGB_565;
+	if (config->bus_width == 24) {
+		caps->supported_pixel_formats |= (PIXEL_FORMAT_RGB_888);
 	}
+	caps->current_pixel_format = lcd_data->pixel_format;
 
 	switch (orientation) {
 	case SSD1963_ORIENTATION90:
@@ -251,10 +258,8 @@ static int ssd1963_set_orientation(const struct device *dev,
 	}
 
 	command_param[0] = lcd_data->addr_mode;
-	flexio_lcdif_write_command(config->flexio_lcd_dev, SSD1963_SET_ADDRESS_MODE);
-	flexio_lcdif_write_data(config->flexio_lcd_dev, command_param, 1U);
-
-	return 0;
+	mipi_dbi_command_write(config->flexio_lcd_dev, &config->dbi_config,
+			       SSD1963_SET_ADDRESS_MODE, command_param, 1U);
 
 	return 0;
 }
@@ -266,16 +271,28 @@ static int ssd1963_set_pixel_format(const struct device *dev,
 	struct ssd1963_data *lcd_data = dev->data;
 	uint8_t command_param[1];
 
-	lcd_data->addr_mode &= (uint8_t)(~SSD1963_ADDR_MODE_BGR);
-
 	/* Address mode. */
-	if (config->pixel_format == PIXEL_FORMAT_BGR_565) {
+	if (pf == PIXEL_FORMAT_BGR_565) {
 		lcd_data->addr_mode |= SSD1963_ADDR_MODE_BGR;
+	} else if (pf == PIXEL_FORMAT_RGB_565) {
+		lcd_data->addr_mode &= (uint8_t)(~SSD1963_ADDR_MODE_BGR);
+	} else if (pf == PIXEL_FORMAT_RGB_888) {
+		/* Check if we have the bus width to support this mode */
+		if (config->bus_width < 24) {
+			LOG_ERR("Unsupported pixel format");
+			return -ENOTSUP;
+		}
+		lcd_data->addr_mode &= (uint8_t)(~SSD1963_ADDR_MODE_BGR);
+	} else {
+		LOG_ERR("Unsupported pixel format");
+		return -ENOTSUP;
 	}
 
 	command_param[0] = lcd_data->addr_mode;
-	flexio_lcdif_write_command(config->flexio_lcd_dev, SSD1963_SET_ADDRESS_MODE);
-	flexio_lcdif_write_data(config->flexio_lcd_dev, command_param, 1U);
+	mipi_dbi_command_write(config->flexio_lcd_dev, &config->dbi_config,
+			       SSD1963_SET_ADDRESS_MODE, command_param, 1U);
+
+	lcd_data->pixel_format = pf;
 
 	return 0;
 }
@@ -352,25 +369,19 @@ static void ssd1963_set_data_interface(const struct device *dev)
 	case 8:
 		command_param[0] = 0;
 		break;
-	case 9:
-		command_param[0] = 6;
-		break;
-	case 12:
-		command_param[0] = 1;
-		break;
 	case 16:
 		command_param[0] = 3;
 		break;
-	case 18:
-		command_param[0] = 4;
-		break;
-	default:
+	case 24:
 		command_param[0] = 5;
 		break;
+	default:
+		LOG_ERR("Unsupported bus data width");
+		return -ENOTSUP;
 	}
 
-	flexio_lcdif_write_command(config->flexio_lcd_dev, SSD1963_SET_PIXEL_DATA_INTERFACE);
-	flexio_lcdif_write_data(config->flexio_lcd_dev, command_param, 1U);
+	mipi_dbi_command_write(config->flexio_lcd_dev, &config->dbi_config,
+			       SSD1963_SET_PIXEL_DATA_INTERFACE, command_param, 1U);
 }
 
 static int ssd1963_init(const struct device *dev)
@@ -389,23 +400,8 @@ static int ssd1963_init(const struct device *dev)
 		return -ENODEV;
 	}
 
-	err = gpio_pin_configure_dt(&config->reset_gpio, GPIO_OUTPUT_HIGH);
-	if (err) {
-		return err;
-	}
-
-	/* Reset the SSD1963 LCD controller. */
-	err = gpio_pin_set_dt(&config->reset_gpio, 0);
-	if (err < 0) {
-		return err;
-	}
-
-	k_usleep(1);
-
-	err = gpio_pin_set_dt(&config->reset_gpio, 1);
-	if (err < 0) {
-		return err;
-	}
+	/* Reset the MIPI DBI controller */
+	mipi_dbi_reset(config->flexio_lcd_dev, &config->dbi_config, 0);
 
 	k_msleep(5);
 
@@ -428,10 +424,10 @@ static int ssd1963_init(const struct device *dev)
 
 	fpr--;
 
-    /* Soft reset. */
-	flexio_lcdif_write_command(config->flexio_lcd_dev, SSD1963_SOFT_RESET);
+	/* Soft reset. */
+	mipi_dbi_command_write(config->flexio_lcd_dev, &config->dbi_config,
+			       SSD1963_SOFT_RESET, NULL, 0);
 	k_msleep(5);
-
 
 	/* Setup the PLL. */
 	/* Set the multiplier and divider. */
@@ -439,28 +435,28 @@ static int ssd1963_init(const struct device *dev)
 	command_param[1] = (uint8_t)(div | (1U << 5U));
 	command_param[2] = 1U << 2U;
 
-	flexio_lcdif_write_command(config->flexio_lcd_dev, SSD1963_SET_PLL_MN);
-	flexio_lcdif_write_data(config->flexio_lcd_dev, command_param, 3U);
+	mipi_dbi_command_write(config->flexio_lcd_dev, &config->dbi_config,
+			       SSD1963_SET_PLL_MN, command_param, 3U);
 
 	/* Enable PLL. */
 	command_param[0] = 0x01U;
-	flexio_lcdif_write_command(config->flexio_lcd_dev, SSD1963_SET_PLL);
-	flexio_lcdif_write_data(config->flexio_lcd_dev, command_param, 1U);
+	mipi_dbi_command_write(config->flexio_lcd_dev, &config->dbi_config,
+			       SSD1963_SET_PLL, command_param, 1U);
 
 	/* Delay at least 100us, to wait for the PLL stable. */
 	k_usleep(500);
 
 	/* Use the PLL. */
 	command_param[0] = 0x03U;
-	flexio_lcdif_write_command(config->flexio_lcd_dev, SSD1963_SET_PLL);
-	flexio_lcdif_write_data(config->flexio_lcd_dev, command_param, 1U);
+	mipi_dbi_command_write(config->flexio_lcd_dev, &config->dbi_config,
+			       SSD1963_SET_PLL, command_param, 1U);
 
 	/* Configure the pixel clock. */
 	command_param[0] = ((fpr & 0xFF0000U) >> 16U);
 	command_param[1] = ((fpr & 0xFF00U) >> 8U);
 	command_param[2] = ((fpr & 0xFFU));
-	flexio_lcdif_write_command(config->flexio_lcd_dev, SSD1963_SET_LSHIFT_FREQ);
-	flexio_lcdif_write_data(config->flexio_lcd_dev, command_param, 3U);
+	mipi_dbi_command_write(config->flexio_lcd_dev, &config->dbi_config,
+			       SSD1963_SET_LSHIFT_FREQ, command_param, 3U);
 
 	/* Configure LCD panel. */
 	command_param[0] = (uint8_t)((uint8_t)(config->dot_polarity << SSD1963_SET_LCD_DOT_POL_OFF) |
@@ -473,8 +469,8 @@ static int ssd1963_init(const struct device *dev)
 	command_param[4] = (uint8_t)((config->panel_height - 1U) >> 8);
 	command_param[5] = (uint8_t)((config->panel_height - 1U) & 0xFFU);
 	command_param[6] = 0;
-	flexio_lcdif_write_command(config->flexio_lcd_dev, SSD1963_SET_LCD_MODE);
-	flexio_lcdif_write_data(config->flexio_lcd_dev, command_param, 7U);
+	mipi_dbi_command_write(config->flexio_lcd_dev, &config->dbi_config,
+			       SSD1963_SET_LCD_MODE, command_param, 7U);
 
 	/* Horizontal period setting. */
 	ht = config->panel_width + config->hsw + config->hfp + config->hbp;
@@ -487,8 +483,8 @@ static int ssd1963_init(const struct device *dev)
 	command_param[5] = 0U;
 	command_param[6] = 0U;
 	command_param[7] = 0U;
-	flexio_lcdif_write_command(config->flexio_lcd_dev, SSD1963_SET_HORI_PERIOD);
-	flexio_lcdif_write_data(config->flexio_lcd_dev, command_param, 8U);
+	mipi_dbi_command_write(config->flexio_lcd_dev, &config->dbi_config,
+			       SSD1963_SET_HORI_PERIOD, command_param, 8U);
 
 	/* Vertical period setting. */
 	vt = config->panel_height + config->vsw + config->vfp + config->vbp;
@@ -500,10 +496,13 @@ static int ssd1963_init(const struct device *dev)
 	command_param[4] = (uint8_t)(config->vsw - 1U);
 	command_param[5] = 0U;
 	command_param[6] = 0U;
-	flexio_lcdif_write_command(config->flexio_lcd_dev, SSD1963_SET_VERT_PERIOD);
-	flexio_lcdif_write_data(config->flexio_lcd_dev, command_param, 7U);
+	mipi_dbi_command_write(config->flexio_lcd_dev, &config->dbi_config,
+			       SSD1963_SET_VERT_PERIOD, command_param, 7U);
 
-	ssd1963_set_data_interface(dev);
+	if (ssd1963_set_data_interface(dev)) {
+		return -EINVAL;
+	}
+
 	ssd1963_set_pixel_format(dev, config->pixel_format);
 
 	LOG_DBG("%s device is ready", dev->name);
@@ -526,8 +525,10 @@ static struct display_driver_api ssd1963_driver_api = {
 
 #define SSD1963_DEFINE(n)								\
 	static const struct ssd1963_config ssd1963_cfg_##n = {				\
-		.flexio_lcd_dev = DEVICE_DT_GET(DT_INST_PHANDLE(n, nxp_lcdif)),		\
-		.reset_gpio = GPIO_DT_SPEC_INST_GET(n, reset_gpios),			\
+		.flexio_lcd_dev = DEVICE_DT_GET(DT_PARENT(DT_DRV_INST(n))),		\
+		.dbi_config = { 							\
+			.mode = DT_INST_PROP(n, bus_type),				\
+		},									\
 		.bus_width = DT_INST_PROP(n, data_bus_width),				\
 		.pixel_format = DT_INST_PROP(n, pixel_format),				\
 		.xtal_frequency = DT_INST_PROP(n, xtal_frequency),			\
