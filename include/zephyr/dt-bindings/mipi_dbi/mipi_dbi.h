@@ -59,7 +59,14 @@
  *          -'-------------------------------'-------------------------------'-
  */
 #define MIPI_DBI_MODE_SPI_4WIRE 0x2
-
+/**
+ * Parallel Bus protocol for MIPI DBI Type A based on Motorola 6800 bus.
+ */
+#define MIPI_DBI_MODE_6800_BUS 0x3
+/**
+ * Parallel Bus protocol for MIPI DBI Type B based on Intel 8080 bus.
+ */
+#define MIPI_DBI_MODE_8080_BUS 0x4
 
 /** @} */
 
