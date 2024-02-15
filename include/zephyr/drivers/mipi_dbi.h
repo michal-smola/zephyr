@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 NXP
+ * Copyright 2023-2024 NXP
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -32,50 +32,11 @@
 #include <zephyr/drivers/display.h>
 #include <zephyr/display/mipi_display.h>
 #include <zephyr/drivers/spi.h>
+#include <zephyr/dt-bindings/mipi_dbi/mipi_dbi.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/**
- * SPI 3 wire (Type C1). Uses 9 write clocks to send a byte of data.
- * The bit sent on the 9th clock indicates whether the byte is a
- * command or data byte
- *
- *
- *           .---.   .---.   .---.   .---.   .---.   .---.   .---.   .---.
- *     SCK  -'   '---'   '---'   '---'   '---'   '---'   '---'   '---'   '---
- *
- *          -.---.---.---.---.---.---.---.---.---.---.---.---.---.---.---.
- *     DOUT  |D/C| D7| D6| D5| D4| D3| D2| D1| D0|D/C| D7| D6| D5| D4|...|
- *          -'---'---'---'---'---'---'---'---'---'---'---'---'---'---'---'
- *           | Word 1                            | Word n
- *
- *          -.								 .--
- *     CS    '-----------------------------------------------------------'
- */
-#define MIPI_DBI_MODE_SPI_3WIRE 0x1
-/**
- * SPI 4 wire (Type C3). Uses 8 write clocks to send a byte of data.
- * an additional C/D pin will be use to indicate whether the byte is a
- * command or data byte
- *
- *           .---.   .---.   .---.   .---.   .---.   .---.   .---.   .---.
- *     SCK  -'   '---'   '---'   '---'   '---'   '---'   '---'   '---'   '---
- *
- *          -.---.---.---.---.---.---.---.---.---.---.---.---.---.---.---.---.
- *     DOUT  | D7| D6| D5| D4| D3| D2| D1| D0| D7| D6| D5| D4| D3| D2| D1| D0|
- *          -'---'---'---'---'---'---'---'---'---'---'---'---'---'---'---'---'
- *           | Word 1                        | Word n
- *
- *          -.								     .--
- *     CS    '---------------------------------------------------------------'
- *
- *          -.-------------------------------.-------------------------------.-
- *     CD    |             D/C               |             D/C               |
- *          -'-------------------------------'-------------------------------'-
- */
-#define MIPI_DBI_MODE_SPI_4WIRE 0x2
 
 /**
  * @brief initialize a MIPI DBI SPI configuration struct from devicetree

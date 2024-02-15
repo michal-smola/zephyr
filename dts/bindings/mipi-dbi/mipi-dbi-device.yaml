@@ -8,6 +8,12 @@ include: [base.yaml, power.yaml]
 on-bus: mipi-dbi
 
 properties:
+  mipi-dbi-mode:
+    type: int
+    required: true
+    description: |
+      MIPI-DBI formats. See dt-bindings/mipi_dbi/mipi_dbi.h
+
   mipi-max-frequency:
     type: int
     description: Maximum clock frequency of device's MIPI interface in Hz
