@@ -112,10 +112,9 @@ __ramfunc uint32_t flexspi_clock_set_freq(uint32_t clock_name, uint32_t rate)
 
 static int frdm_mcxn947_init(void)
 {
-	enable_lpcac();
-
 	/* Do not re-run this clock init code if using MCUBoot */
-#ifndef CONFIG_BOOTLOADER_MCUBOOT
+#ifndef CONFIG_BOOTLOADER_MUCBOOT
+	enable_lpcac();
 
 	power_mode_od();
 
