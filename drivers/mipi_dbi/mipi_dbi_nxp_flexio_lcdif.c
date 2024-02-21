@@ -45,14 +45,14 @@ struct mcux_flexio_lcdif_data {
 	struct k_sem transfer_done;
 };
 
-static int flexio_lcdif_isr(const struct device *dev)
+static int flexio_lcdif_isr(void *user_data)
 {
 	/* We use DMA for transfer, no interrupt used */
 	return 0;
 }
 
 static void flexio_lcdif_dma_callback(const struct device *dev, void *arg,
-				      int32_t channel, int status)
+				      uint32_t channel, int status)
 {
 	const struct device *flexio_dev = (struct device *)arg;
 	struct mcux_flexio_lcdif_data *lcdif_data = flexio_dev->data;
@@ -427,7 +427,7 @@ static struct mipi_dbi_driver_api mipi_dbi_lcdif_driver_api = {
 		.flexio_lcd_dev = &flexio_mculcd_##n,					\
 		.flexio_dev = DEVICE_DT_GET(DT_INST_PARENT(n)), 			\
 		.pincfg = PINCTRL_DT_INST_DEV_CONFIG_GET(n),				\
-		.child = &mcux_flexio_ldcif_child_##n,					\
+		.child = &lcdif_child_##n,						\
 		.baudrate_bps = DT_INST_PROP(n, baudrate_bps),				\
 		MCUX_FLEXIO_DATA_BUS_WIDTH						\
 		.reset = GPIO_DT_SPEC_INST_GET(n, reset_gpios),				\
@@ -455,7 +455,7 @@ static struct mipi_dbi_driver_api mipi_dbi_lcdif_driver_api = {
 		&mcux_flexio_lcdif_data_##n,						\
 		&mcux_flexio_lcdif_config_##n,						\
 		POST_KERNEL,								\
-		CONFIG_MCUX_FLEXIO_CHILD_INIT_PRIORITY,					\
+		CONFIG_MIPI_DBI_INIT_PRIORITY,					\
 		&mipi_dbi_lcdif_driver_api);
 
 DT_INST_FOREACH_STATUS_OKAY(MCUX_FLEXIO_LCDIF_DEVICE_INIT)

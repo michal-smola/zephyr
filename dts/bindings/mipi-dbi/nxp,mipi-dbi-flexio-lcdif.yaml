@@ -5,7 +5,7 @@ description: NXP FlexIO LCD controller
 
 compatible: "nxp,mipi-dbi-flexio-lcdif"
 
-include: ["mipi-dbi-controller.yaml", base.yaml]
+include: [mipi-dbi-controller.yaml, base.yaml, pinctrl-device.yaml]
 
 properties:
   shifters_count:

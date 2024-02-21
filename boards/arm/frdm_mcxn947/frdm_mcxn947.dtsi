@@ -7,6 +7,7 @@
 #include "frdm_mcxn947-pinctrl.dtsi"
 #include <zephyr/dt-bindings/i2c/i2c.h>
 #include <zephyr/dt-bindings/display/panel.h>
+#include <zephyr/dt-bindings/mipi_dbi/mipi_dbi.h>
 
 / {
 	aliases{
@@ -31,33 +32,6 @@
 			gpios = <&gpio0 10 GPIO_ACTIVE_LOW>;
 			label = "Red LED";
 			status = "disabled";
-		};
-	};
-
-	ssd1963_display: ssd1963-display {
-		compatible = "solomon,ssd1963";
-		reset-gpios = <&gpio4 7 GPIO_ACTIVE_HIGH>;
-		pixel-format = <PANEL_PIXEL_FORMAT_BGR_565>;
-		xtal-frequency = <10000000>;
-		data-bus-width = <16>;
-		panel-data-width = <1>;
-		nxp,lcdif = <&flexio0_lcd>;
-		width = <800>;
-		height = <480>;
-		display-timings {
-			compatible = "zephyr,panel-timing";
-			hsync-len = <48>;
-			hfront-porch = <40>;
-			hback-porch = <0>;
-			vsync-len = <3>;
-			vfront-porch = <13>;
-			vback-porch = <18>;
-			hsync-active = <0>;
-			vsync-active = <0>;
-			de-active = <0>;
-			pixelclk-active = <0>;
-			/* Pixel clock */
-			clock-frequency = <30000000>;
 		};
 	};
 };
@@ -136,23 +110,50 @@
 
 &flexio0 {
 	flexio0_lcd: flexio0-lcd {
-		compatible = "nxp,flexio-lcdif";
+		compatible = "nxp,mipi-dbi-flexio-lcdif";
 		#address-cells = <1>;
 		#size-cells = <0>;
 		/* DMA channels 0, muxed to FlexIO TX */
 		dmas = <&edma0 0 61>;
 		dma-names = "tx";
-		shifters = <0 1 2 3 4 5 6 7>;
-		timers   = <0>;
+		shifters_count = <8>;
+		timers_count   = <1>;
 		enwr-pin = <1>;
 		rd-pin = <0>;
 		data-pin-start = <16>;
-		bus-type = <0>;
 		/* 16-bit data bus, baud rate on each pin is 1MHz. */
 		baudrate-bps = <160000000>;
+		reset-gpios = <&gpio4 7 GPIO_ACTIVE_HIGH>;
 		cs-gpios = <&gpio0 12 GPIO_ACTIVE_HIGH>;
 		rs-gpios = <&gpio0 7 GPIO_ACTIVE_HIGH>;
 		pinctrl-0 = <&pinmux_flexio_lcd>;
 		pinctrl-names = "default";
+
+		ssd1963_display: ssd1963-display@0 {
+			compatible = "solomon,ssd1963";
+			pixel-format = <PANEL_PIXEL_FORMAT_BGR_565>;
+			xtal-frequency = <10000000>;
+			data-bus-width = <16>;
+			panel-data-width = <1>;
+			mipi-dbi-mode = <MIPI_DBI_MODE_8080_BUS>;
+			width = <800>;
+			height = <480>;
+			reg = <0>;
+			display-timings {
+				compatible = "zephyr,panel-timing";
+				hsync-len = <48>;
+				hfront-porch = <40>;
+				hback-porch = <0>;
+				vsync-len = <3>;
+				vfront-porch = <13>;
+				vback-porch = <18>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <0>;
+				pixelclk-active = <0>;
+				/* Pixel clock */
+				clock-frequency = <30000000>;
+			};
+		};
 	};
 };

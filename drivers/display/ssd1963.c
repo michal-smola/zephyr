@@ -156,16 +156,18 @@ static int ssd1963_write(const struct device *dev, const uint16_t x,
 {
 	const struct ssd1963_config *config = dev->config;
 	struct ssd1963_data *lcd_data = dev->data;
+	struct display_buffer_descriptor mipi_desc;
 
 	LOG_DBG("W=%d, H=%d, @%d,%d", desc->width, desc->height, x, y);
 
+	memcpy(&mipi_desc, desc, sizeof(struct display_buffer_descriptor));
 	ssd1963_select_area(dev, x, y, x + desc->width -1, y + desc->height - 1);
 
 	mipi_dbi_command_write(config->flexio_lcd_dev, &config->dbi_config,
 			       SSD1963_WRITE_MEMORY_START, NULL, 0);
 
 	mipi_dbi_write_display(config->flexio_lcd_dev, &config->dbi_config,
-			       buf, desc, lcd_data->pixel_format)
+			       buf, &mipi_desc, lcd_data->pixel_format);
 
 	return 0;
 }
@@ -359,7 +361,7 @@ static int ssd1963_get_pll_divider(uint8_t *multi, uint8_t *div, uint32_t src_cl
 	return pll_freq_candidate;
 }
 
-static void ssd1963_set_data_interface(const struct device *dev)
+static int ssd1963_set_data_interface(const struct device *dev)
 {
 	const struct ssd1963_config *config = dev->config;
 	uint8_t command_param[1];
@@ -382,12 +384,13 @@ static void ssd1963_set_data_interface(const struct device *dev)
 
 	mipi_dbi_command_write(config->flexio_lcd_dev, &config->dbi_config,
 			       SSD1963_SET_PIXEL_DATA_INTERFACE, command_param, 1U);
+
+	return 0;
 }
 
 static int ssd1963_init(const struct device *dev)
 {
 	const struct ssd1963_config *config = dev->config;
-	int err;
 	uint8_t multi, div;
 	uint32_t pll_freq_hz;
 	/* Pixel clock = PLL clock * ((fpr + 1) / 2^20) */
@@ -527,7 +530,7 @@ static struct display_driver_api ssd1963_driver_api = {
 	static const struct ssd1963_config ssd1963_cfg_##n = {				\
 		.flexio_lcd_dev = DEVICE_DT_GET(DT_PARENT(DT_DRV_INST(n))),		\
 		.dbi_config = { 							\
-			.mode = DT_INST_PROP(n, bus_type),				\
+			.mode = DT_INST_PROP(n, mipi_dbi_mode),				\
 		},									\
 		.bus_width = DT_INST_PROP(n, data_bus_width),				\
 		.pixel_format = DT_INST_PROP(n, pixel_format),				\

@@ -6,5 +6,6 @@ config SSD1963
 	bool "SSD1963 compatible display controller driver"
 	default y
 	depends on DT_HAS_SOLOMON_SSD1963_ENABLED
+	select MIPI_DBI
 	help
 	  Enable driver for SSD1963 compatible controller.

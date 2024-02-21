@@ -3,3 +3,4 @@
 # SPDX-License-Identifier: Apache-2.0
 
 zephyr_sources_ifdef(CONFIG_MIPI_DBI_SPI mipi_dbi_spi.c)
+zephyr_sources_ifdef(CONFIG_MIPI_DBI_MCUX_FLEXIO mipi_dbi_nxp_flexio_lcdif.c)

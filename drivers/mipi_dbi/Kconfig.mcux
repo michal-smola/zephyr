@@ -5,7 +5,9 @@ config MIPI_DBI_MCUX_FLEXIO
 	bool "MIPI DBI MCUX driver"
 	default y
 	depends on DT_HAS_NXP_MIPI_DBI_FLEXIO_LCDIF_ENABLED
+	depends on CLOCK_CONTROL
 	select MCUX_FLEXIO
+	select DMA
 	help
 	  Enable support for MIPI DBI SPI driver. This driver implements
 	  a MIPI-DBI mode C compatible controller using a SPI device, as well

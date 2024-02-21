@@ -626,7 +626,7 @@
 	};
 
 	flexio0: flexio@105000 {
-		compatible = "nxp,imx-flexio";
+		compatible = "nxp,flexio";
 		reg = <0x105000 0x1000>;
 		status = "disabled";
 		interrupts = <105 0>;
