@@ -129,7 +129,7 @@
 		pinctrl-0 = <&pinmux_flexio_lcd>;
 		pinctrl-names = "default";
 
-		ssd1963_display: ssd1963-display {
+		ssd1963_display: ssd1963-display@0 {
 			compatible = "solomon,ssd1963";
 			pixel-format = <PANEL_PIXEL_FORMAT_BGR_565>;
 			xtal-frequency = <10000000>;
@@ -138,6 +138,7 @@
 			mipi-dbi-mode = <MIPI_DBI_MODE_8080_BUS>;
 			width = <800>;
 			height = <480>;
+			reg = <0>;
 			display-timings {
 				compatible = "zephyr,panel-timing";
 				hsync-len = <48>;

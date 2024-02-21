@@ -90,16 +90,24 @@ void power_mode_od(void)
 	SPC_SetSRAMOperateVoltage(SPC0, &cfg);
 }
 
-__ramfunc void flexspi_clock_setup(void)
+__ramfunc uint32_t flexspi_clock_set_freq(uint32_t clock_name, uint32_t rate)
 {
+	/* PLL0 is set to 150 MHz */
+	uint32_t pll_rate = 150000000;
+	uint8_t divider;
+
 	/* Disable the FLEXSPI clock */
 	SYSCON->FLEXSPICLKSEL = 0;
 
-	/* Flexspi frequency 150MHz / 2 = 75MHz */
-	SYSCON->FLEXSPICLKDIV = 1;
+	divider = ((pll_rate + (rate - 1)) / rate) - 1;
+	/* Max divider value is 8 */
+	divider = MIN(divider, 8);
+	SYSCON->FLEXSPICLKDIV = divider;
 
 	/* Switch FLEXSPI to PLL0 */
 	SYSCON->FLEXSPICLKSEL = 1;
+
+	return 0;
 }
 
 static int mcxn9xxbrk_init(void)
@@ -195,7 +203,8 @@ static int mcxn9xxbrk_init(void)
 #endif
 
 #if DT_NODE_HAS_STATUS(DT_NODELABEL(flexspi), okay)
-	flexspi_clock_setup();
+	/* Find the clock closest to the max frequency */
+	flexspi_clock_set_freq(0, DT_PROP(DT_NODELABEL(w25q64jvssiq), spi_max_frequency));
 #if !(CONFIG_FLASH_DISABLE_CACHE64)
 	/* Enable CACHE64 for FlexSPI */
 	enable_cache64();

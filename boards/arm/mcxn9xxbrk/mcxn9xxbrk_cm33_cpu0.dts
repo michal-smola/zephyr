@@ -125,7 +125,7 @@ zephyr_udc0: &usb1 {
 };
 
 &flexio0 {
-	status = "disabled";
+	status = "okay";
 };
 
 &flexspi {
