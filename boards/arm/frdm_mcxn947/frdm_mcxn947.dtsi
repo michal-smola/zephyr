@@ -129,31 +129,26 @@
 		pinctrl-0 = <&pinmux_flexio_lcd>;
 		pinctrl-names = "default";
 
-		ssd1963_display: ssd1963-display@0 {
-			compatible = "solomon,ssd1963";
-			pixel-format = <PANEL_PIXEL_FORMAT_BGR_565>;
-			xtal-frequency = <10000000>;
-			data-bus-width = <16>;
-			panel-data-width = <1>;
-			mipi-dbi-mode = <MIPI_DBI_MODE_8080_BUS>;
-			width = <800>;
-			height = <480>;
+		st7796s: st7796s@0 {
+			compatible = "sitronix,st7796s";
 			reg = <0>;
-			display-timings {
-				compatible = "zephyr,panel-timing";
-				hsync-len = <48>;
-				hfront-porch = <40>;
-				hback-porch = <0>;
-				vsync-len = <3>;
-				vfront-porch = <13>;
-				vback-porch = <18>;
-				hsync-active = <0>;
-				vsync-active = <0>;
-				de-active = <0>;
-				pixelclk-active = <0>;
-				/* Pixel clock */
-				clock-frequency = <30000000>;
-			};
+			mipi-max-frequency = <43000000>;
+			mipi-dbi-mode = <MIPI_DBI_MODE_8080_BUS>;
+			height = <320>;
+			width = <480>;
+			invert-mode = "1-dot";
+			frmctl1 = [80 10];
+			bpc = [1F 50 00 20];
+			dfc = [8A 07 3B];
+			pwr1 = [80 64];
+			pwr2 = <0x13>;
+			pwr3 = <0xA7>;
+			vcmpctl = <0x09>;
+			doca = [40 8A 00 00 29 19 A5 33];
+			pgc = [F0 06 0B 07 06 05 2E 33 47 3A 17 16 2E 31];
+			ngc = [F0 09 0D 09 08 23 2E 33 46 38 13 13 2C 32];
+			madctl = <0x28>;
+			color-invert;
 		};
 	};
 };

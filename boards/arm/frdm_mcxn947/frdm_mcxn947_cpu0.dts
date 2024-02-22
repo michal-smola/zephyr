@@ -32,7 +32,7 @@
 		zephyr,console = &flexcomm4_lpuart4;
 		zephyr,shell-uart = &flexcomm4_lpuart4;
 		zephyr,canbus = &flexcan0;
-		zephyr,display = &ssd1963_display;
+		zephyr,display = &st7796s;
 	};
 
 	gpio_keys {
