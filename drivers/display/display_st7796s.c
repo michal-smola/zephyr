@@ -312,7 +312,7 @@ static int st7796s_init(const struct device *dev)
 	/* Since VDDI comes up before reset pin is low, we must reset display
 	 * state. Pulse for 100 MS, per datasheet
 	 */
-	ret = mipi_dbi_reset(config->mipi_dbi, 100);
+	ret = mipi_dbi_reset(config->mipi_dbi, &config->dbi_config, 100);
 	if (ret < 0) {
 		return ret;
 	}
@@ -380,7 +380,7 @@ static const struct display_driver_api st7796s_api = {
 						SPI_OP_MODE_MASTER |          	\
 						SPI_WORD_SET(8),              	\
 						0),                           	\
-			.mode = MIPI_DBI_MODE_SPI_4WIRE,			\
+			.mode = DT_INST_PROP(n, mipi_dbi_mode),			\
 		},								\
 		.width = DT_INST_PROP(n, width),				\
 		.height = DT_INST_PROP(n, height),				\
