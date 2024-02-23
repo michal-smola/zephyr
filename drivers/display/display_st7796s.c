@@ -173,9 +173,9 @@ static void st7796s_get_capabilities(const struct device *dev,
 
 	if (data->madctl & ST7796S_MADCTL_BGR) {
 		/* Zephyr treats RGB565 as BGR565 */
-		capabilities->current_pixel_format = PIXEL_FORMAT_RGB_565;
-	} else {
 		capabilities->current_pixel_format = PIXEL_FORMAT_BGR_565;
+	} else {
+		capabilities->current_pixel_format = PIXEL_FORMAT_RGB_565;
 	}
 	capabilities->x_resolution = config->width;
 	capabilities->y_resolution = config->height;
@@ -185,9 +185,26 @@ static void st7796s_get_capabilities(const struct device *dev,
 static int st7796s_set_pixel_format(const struct device *dev,
 				    const enum display_pixel_format pixel_format)
 {
-	LOG_ERR("Changing pixel format not implemented");
+	struct st7796s_data *data = dev->data;
+	int ret;
+	uint8_t param;
 
-	return -ENOTSUP;
+	if (pixel_format == PIXEL_FORMAT_BGR_565) {
+		data->madctl |= ST7796S_MADCTL_BGR;
+	} else if (pixel_format == PIXEL_FORMAT_RGB_565) {
+		data->madctl &= (uint8_t)(~ST7796S_MADCTL_BGR);
+	} else {
+		LOG_ERR("Unsupported pixel format");
+		return -ENOTSUP;
+	}
+
+	param = data->madctl;
+	ret = st7796s_send_cmd(dev, ST7796S_CMD_MADCTL, &param, sizeof(param));
+	if (ret < 0) {
+		return ret;
+	}
+
+	return 0;
 }
 
 static int st7796s_set_orientation(const struct device *dev,
