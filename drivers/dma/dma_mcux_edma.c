@@ -125,11 +125,11 @@ struct dma_mcux_edma_data {
 
 #if defined(FSL_FEATURE_SOC_DMAMUX_COUNT) && FSL_FEATURE_SOC_DMAMUX_COUNT
 #define DEV_DMAMUX_BASE(dev, idx) ((DMAMUX_Type *)DEV_CFG(dev)->dmamux_base[idx])
-#endif
 #define DEV_DMAMUX_IDX(dev, ch)	(ch / DEV_CFG(dev)->channels_per_mux)
 
 #define DEV_DMAMUX_CHANNEL(dev, ch) \
 	(ch % DEV_CFG(dev)->channels_per_mux) ^ (DEV_CFG(dev)->dmamux_reg_offset)
+#endif
 
 /*
  * The hardware channel (takes the gap into account) is used when access DMA registers.
@@ -251,7 +251,6 @@ static int dma_mcux_edma_configure(const struct device *dev, uint32_t channel,
 	struct call_back *data = DEV_CHANNEL_DATA(dev, channel);
 	struct dma_block_config *block_config = config->head_block;
 	uint32_t slot = config->dma_slot;
-	uint8_t dmamux_idx, dmamux_channel;
 	uint32_t hw_channel;
 	edma_transfer_type_t transfer_type;
 	unsigned int key;
@@ -268,8 +267,12 @@ static int dma_mcux_edma_configure(const struct device *dev, uint32_t channel,
 	}
 
 	hw_channel = dma_mcux_edma_add_channel_gap(dev, channel);
+#if defined(FSL_FEATURE_SOC_DMAMUX_COUNT) && FSL_FEATURE_SOC_DMAMUX_COUNT
+	uint8_t dmamux_idx, dmamux_channel;
+
 	dmamux_idx = DEV_DMAMUX_IDX(dev, channel);
 	dmamux_channel = DEV_DMAMUX_CHANNEL(dev, channel);
+#endif
 	data->transfer_settings.valid = false;
 
 	switch (config->channel_direction) {
