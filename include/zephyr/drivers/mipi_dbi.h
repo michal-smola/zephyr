@@ -219,7 +219,12 @@ static inline int mipi_dbi_reset(const struct device *dev, uint32_t delay)
 /**
  * @brief Configures the attached display controller
  *
- * Configures the attached display controller.
+ * Configures the attached display controller. Configuration will be applied
+ * to the controller before the next read/write to the MIPI DBI device
+ * (but may not be applied immediately). Like the SPI API, changes to
+ * configuration settings may be checked using pointer comparison, so
+ * users should pass a pointer to a new configuration structure to update
+ * settings.
  * @param dev mipi dbi controller
  * @param config MIPI DBI configuration
  * @retval 0 config succeeded
