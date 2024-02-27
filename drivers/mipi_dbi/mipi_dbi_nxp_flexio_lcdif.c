@@ -257,9 +257,8 @@ static int mipi_dbi_flexio_lcdif_command_write(const struct device *dev,
 
 }
 
-static int mipi_dbi_flexio_lcdif_reset(const struct device *dev,
-				       const struct mipi_dbi_config *dbi_config,
-				       uint32_t delay)
+static int mipi_dbi_flexio_lcdif_configure(const struct device *dev,
+					       const struct mipi_dbi_config *dbi_config)
 {
 	const struct mcux_flexio_lcdif_config *config = dev->config;
 	flexio_mculcd_config_t flexioMcuLcdConfig;
@@ -303,7 +302,15 @@ static int mipi_dbi_flexio_lcdif_reset(const struct device *dev,
 		return -EINVAL;
 	}
 
-	/* Checkf if a reset port is provided to reset the LCD controller */
+	return 0;
+}
+
+static int mipi_dbi_flexio_lcdif_reset(const struct device *dev, uint32_t delay)
+{
+	int err;
+	const struct mcux_flexio_lcdif_config *config = dev->config;
+
+	/* Check if a reset port is provided to reset the LCD controller */
 	if (config->reset.port == NULL) {
 		return 0;
 	}
@@ -382,6 +389,7 @@ static struct mipi_dbi_driver_api mipi_dbi_lcdif_driver_api = {
 	.reset = mipi_dbi_flexio_lcdif_reset,
 	.command_write = mipi_dbi_flexio_lcdif_command_write,
 	.write_display = mipi_dbi_flexio_ldcif_write_display,
+	.configure = mipi_dbi_flexio_lcdif_configure,
 };
 
 /* The width is read from device tree by the CMake file and passed in as a

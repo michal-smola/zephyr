@@ -329,12 +329,18 @@ static int st7796s_init(const struct device *dev)
 	/* Since VDDI comes up before reset pin is low, we must reset display
 	 * state. Pulse for 100 MS, per datasheet
 	 */
-	ret = mipi_dbi_reset(config->mipi_dbi, &config->dbi_config, 100);
+	ret = mipi_dbi_reset(config->mipi_dbi, 100);
 	if (ret < 0) {
 		return ret;
 	}
 	/* Delay an additional 100ms after reset */
 	k_msleep(100);
+
+	/* Configure the MIPI display controller */
+	ret = mipi_dbi_configure(config->mipi_dbi, &config->dbi_config);
+	if (ret < 0) {
+		return ret;
+	}
 
 	/* Configure controller parameters */
 	ret = st7796s_lcd_config(dev);

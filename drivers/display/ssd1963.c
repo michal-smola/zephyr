@@ -403,10 +403,17 @@ static int ssd1963_init(const struct device *dev)
 		return -ENODEV;
 	}
 
-	/* Reset the MIPI DBI controller */
-	mipi_dbi_reset(config->flexio_lcd_dev, &config->dbi_config, 0);
+	/* Reset the display controller */
+	if (!mipi_dbi_reset(config->flexio_lcd_dev, 1)) {
+		return -ENODEV;
+	}
 
 	k_msleep(5);
+
+	/* Configure the MIPI DBI display interface */
+	if (!mipi_dbi_configure(config->flexio_lcd_dev, &config->dbi_config)) {
+		return -ENODEV;
+	}
 
 	pll_freq_hz = ssd1963_get_pll_divider(&multi, &div, config->xtal_frequency);
 	/* Could not set the PLL to desired frequency. */
