@@ -242,14 +242,10 @@ static inline bool mipi_dbi_has_pin(const struct gpio_dt_spec *spec)
 	return spec->port != NULL;
 }
 
-static int mipi_dbi_spi_reset(const struct device *dev,
-			      const struct mipi_dbi_config *dbi_config,
-			      uint32_t delay)
+static int mipi_dbi_spi_reset(const struct device *dev, uint32_t delay)
 {
 	const struct mipi_dbi_spi_config *config = dev->config;
 	int ret;
-
-	ARG_UNUSED(dbi_config);
 
 	if (!mipi_dbi_has_pin(&config->reset)) {
 		return -ENOTSUP;
