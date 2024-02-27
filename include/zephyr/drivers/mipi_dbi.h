@@ -94,6 +94,7 @@ __subsystem struct mipi_dbi_driver_api {
 			     struct display_buffer_descriptor *desc,
 			     enum display_pixel_format pixfmt);
 	int (*reset)(const struct device *dev, uint32_t delay);
+	int (*configure)(const struct device *dev, const struct mipi_dbi_config *config);
 };
 
 /**
@@ -213,6 +214,29 @@ static inline int mipi_dbi_reset(const struct device *dev, uint32_t delay)
 		return -ENOSYS;
 	}
 	return api->reset(dev, delay);
+}
+
+/**
+ * @brief Configures the attached display controller
+ *
+ * Configures the attached display controller.
+ * @param dev mipi dbi controller
+ * @param config MIPI DBI configuration
+ * @retval 0 config succeeded
+ * @retval -EIO I/O error
+ * @retval -ENOSYS not implemented
+ * @retval -ENOTSUP not supported
+ */
+static inline int mipi_dbi_configure(const struct device *dev,
+				     const struct mipi_dbi_config *config)
+{
+	const struct mipi_dbi_driver_api *api =
+		(const struct mipi_dbi_driver_api *)dev->api;
+
+	if (api->configure == NULL) {
+		return -ENOSYS;
+	}
+	return api->configure(dev, config);
 }
 
 #ifdef __cplusplus
