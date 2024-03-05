@@ -1,3 +1,8 @@
+This branch is a short-term release to enable the FRDM-MCXN947 board. NXP is
+upstreaming this support, and long-term will maintain support for this board upstream.
+When the upstream support is available, this branch will be deleted, and no longer supported.
+
+
 Zephyr MCXN94X Early Access Release 2.2
 =======================================
 
