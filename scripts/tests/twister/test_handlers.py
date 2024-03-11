@@ -75,7 +75,7 @@ def faux_timer():
 TESTDATA_1 = [
     (True, False, 'posix', ['Install pyserial python module with pip to use' \
      ' --device-testing option.'], None),
-    (False, True, 'nt', [], None),
+    (False, True, 'nt', [], ModuleNotFoundError),
     (True, True, 'posix', ['Install pyserial python module with pip to use' \
      ' --device-testing option.'], ImportError),
 ]

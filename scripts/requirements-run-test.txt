@@ -17,3 +17,6 @@ psutil
 
 # Artifacts package creation
 bz
+
+# use by twister for QEMU on Windows
+pywin32; sys_platform == "win32"
