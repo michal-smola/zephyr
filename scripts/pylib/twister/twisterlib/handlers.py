@@ -18,8 +18,6 @@ import subprocess
 import sys
 import threading
 import time
-if os.name == "nt":
-    import win32pipe, win32file
 
 from queue import Queue, Empty
 from twisterlib.environment import ZEPHYR_BASE
@@ -1167,36 +1165,17 @@ class QEMUWinHandler(Handler):
         while not self.stop_thread:
             if not self.pipe_handle:
                 try:
-                    self.pipe_handle = win32file.CreateFile(
-                        r"\\.\pipe\\" + self.fifo_fn,
-                        win32file.GENERIC_READ | win32file.GENERIC_WRITE,
-                        0,
-                        None,
-                        win32file.OPEN_EXISTING,
-                        0,
-                        None
-                    )
-
-                    res = win32pipe.SetNamedPipeHandleState(
-                        self.pipe_handle, win32pipe.PIPE_READMODE_BYTE, None, None
-                    )
-
-                    if res == 0:
-                        continue
-
-                except win32file.error as e:
+                    self.pipe_handle = os.open(r"\\.\pipe\\" + self.fifo_fn, os.O_RDONLY)
+                except FileNotFoundError as e:
                     if e.args[0] == 2:
                         # Pipe is not opened yet, try again after a delay.
                         time.sleep(1)
-
                 continue
 
+            c = ""
             try:
-                c = win32file.ReadFile(self.pipe_handle, 1)[1]
-            except win32file.error:
-                # Reading on closed pipe causes an exception, e.g. if QEMU crashed. Can be ignored.
-                pass
-            else:
+                c = os.read(self.pipe_handle, 1)
+            finally:
                 queue.put(c)
 
     def _monitor_output(self, queue, timeout, logfile, pid_fn, harness, ignore_unexpected_eof=False):
@@ -1336,6 +1315,7 @@ class QEMUWinHandler(Handler):
 
         logger.debug(f"return code from QEMU ({self.pid}): {self.returncode}")
 
+        os.close(self.pipe_handle)
         self.pipe_handle = None
 
         self._update_instance_info(harness.state, is_timeout)
